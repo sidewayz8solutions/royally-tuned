@@ -47,7 +47,7 @@ const BrandLogo = () => (
       className="w-12 h-12 object-contain"
       onError={(e) => {
         // Fallback to crown SVG if logo.png doesn't exist
-        (e.target as HTMLImageElement).src = '/crown.svg';
+        (e.target as HTMLImageElement).src = '/public/rt1.png';
       }}
     />
   </div>
@@ -260,8 +260,8 @@ export default function App() {
             <BrandLogo />
             <div>
               <h1 className="text-2xl font-bold tracking-tight brand-script neon-purple">
-                <span className="text-purple-600">Royally</span>
-                <span className="text-purple-400 ml-1">Tuned</span>
+                <span className="text-red-700">Royally</span>
+                <span className="text-white ml-1">Tuned</span>
               </h1>
               <p className="text-xs text-gray-400">Music Rights Management</p>
             </div>
@@ -269,7 +269,7 @@ export default function App() {
           <div className="flex items-center gap-4">
             <EqualizerBars />
             <motion.div
-              className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 via-purple-500 to-sky-400 flex items-center justify-center text-sm font-bold shadow-lg shadow-purple-600/30"
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-red-600 via-purple-500 to-sky-400 flex items-center justify-center text-sm font-bold shadow-lg shadow-purple-600/30"
               whileHover={{ scale: 1.05 }}
             >
               {profile.artistName?.[0]?.toUpperCase() || 'R'}
@@ -286,7 +286,7 @@ export default function App() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
                   activeTab === tab.id
-                    ? 'bg-gradient-to-r from-red-600 via-red-500 to-sky-400 text-white shadow-lg shadow-purple-600/30'
+                    ? 'bg-gradient-to-r from-red-700 via-red-600 to-red-400 text-white shadow-lg shadow-purple-600/30'
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
                 whileHover={{ scale: 1.02 }}
