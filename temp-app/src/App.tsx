@@ -37,17 +37,23 @@ const AnimatedCounter = ({ value, prefix = '', suffix = '', decimals = 0 }: { va
   return <span>{prefix}{count.toFixed(decimals)}{suffix}</span>;
 };
 
-// Crown Logo Component
-const CrownLogo = () => (
-  <div className="relative">
-    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 via-purple-600 to-pink-500 flex items-center justify-center shadow-lg glow-purple">
-      <Crown className="w-5 h-5 text-white" />
-    </div>
+// Brand Logo Component
+const BrandLogo = () => (
+  <div className="flex items-center gap-3">
+    <img
+      src="/logo.png"
+      alt="Royally Tuned"
+      className="w-12 h-12 object-contain"
+      onError={(e) => {
+        // Fallback to crown SVG if logo.png doesn't exist
+        (e.target as HTMLImageElement).src = '/crown.svg';
+      }}
+    />
   </div>
 );
 
 // Floating Orb Component
-const FloatingOrb = ({ delay = 0, size = 'lg', color = 'purple' }: { delay?: number; size?: string; color?: string }) => {
+const FloatingOrb = ({ delay = 0, size = 'lg', color = 'red' }: { delay?: number; size?: string; color?: string }) => {
   const sizeClasses: Record<string, string> = {
     sm: 'w-32 h-32',
     md: 'w-48 h-48',
@@ -55,10 +61,10 @@ const FloatingOrb = ({ delay = 0, size = 'lg', color = 'purple' }: { delay?: num
     xl: 'w-96 h-96'
   };
   const colorClasses: Record<string, string> = {
-    purple: 'from-purple-600/20 via-purple-500/10 to-transparent',
+    red: 'from-red-600/20 via-red-500/10 to-transparent',
     pink: 'from-pink-600/15 via-pink-500/5 to-transparent',
-    gold: 'from-amber-500/10 via-yellow-500/5 to-transparent',
-    green: 'from-emerald-500/10 via-green-500/5 to-transparent'
+    blue: 'from-sky-400/10 via-sky-300/5 to-transparent',
+    cream: 'from-amber-100/10 via-amber-50/5 to-transparent'
   };
   return (
     <motion.div
@@ -84,7 +90,7 @@ const EqualizerBars = () => (
     {[0.6, 1, 0.4, 0.8, 0.5].map((height, i) => (
       <motion.div
         key={i}
-        className="w-1 bg-gradient-to-t from-purple-500 via-pink-500 to-amber-400 rounded-full"
+        className="w-1 bg-gradient-to-t from-red-500 via-pink-500 to-sky-400 rounded-full"
         animate={{ height: [`${height * 100}%`, '100%', `${height * 60}%`] }}
         transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.1 }}
       />
@@ -92,11 +98,11 @@ const EqualizerBars = () => (
   </div>
 );
 
-// Color schemes for different elements
+// Color schemes for different elements - Royally Tuned Brand
 const kpiColors = [
-  { bg: 'from-purple-500/20 to-purple-600/10', icon: 'text-purple-400', glow: 'shadow-purple-500/20' },
+  { bg: 'from-red-500/20 to-red-600/10', icon: 'text-red-400', glow: 'shadow-red-500/20' },
   { bg: 'from-pink-500/20 to-pink-600/10', icon: 'text-pink-400', glow: 'shadow-pink-500/20' },
-  { bg: 'from-amber-500/20 to-amber-600/10', icon: 'text-amber-400', glow: 'shadow-amber-500/20' },
+  { bg: 'from-sky-400/20 to-sky-500/10', icon: 'text-sky-400', glow: 'shadow-sky-400/20' },
   { bg: 'from-emerald-500/20 to-emerald-600/10', icon: 'text-emerald-400', glow: 'shadow-emerald-500/20' },
 ];
 
@@ -227,42 +233,42 @@ export default function App() {
   };
 
   // Step colors
-  const stepColors = ['#a855f7', '#ec4899', '#3b82f6', '#22c55e', '#f59e0b', '#ef4444'];
+  const stepColors = ['#e63946', '#f472b6', '#7eb8da', '#22c55e', '#f5f0e6', '#ef4444'];
 
   return (
-    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+    <div className="min-h-screen bg-[#3d3d3d] text-white relative overflow-hidden">
       {/* Animated Background */}
       <div className="fixed inset-0 pointer-events-none mesh-bg">
-        <FloatingOrb delay={0} size="xl" color="purple" />
+        <FloatingOrb delay={0} size="xl" color="red" />
         <FloatingOrb delay={2} size="lg" color="pink" />
-        <FloatingOrb delay={4} size="md" color="gold" />
+        <FloatingOrb delay={4} size="md" color="blue" />
         <div className="absolute top-1/4 right-1/4">
-          <FloatingOrb delay={1} size="lg" color="green" />
+          <FloatingOrb delay={1} size="lg" color="cream" />
         </div>
         <div className="absolute bottom-1/4 left-1/3">
-          <FloatingOrb delay={3} size="md" color="purple" />
+          <FloatingOrb delay={3} size="md" color="red" />
         </div>
       </div>
 
       {/* Main Container */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        
+
         {/* Header */}
         <header className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <CrownLogo />
+          <div className="flex items-center gap-4">
+            <BrandLogo />
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">
-                <span className="text-white">Royally</span>
-                <span className="gradient-text ml-1">Tuned</span>
+              <h1 className="text-2xl font-bold tracking-tight brand-script">
+                <span className="text-[#e63946]">Royally</span>
+                <span className="text-[#f472b6] ml-1">Tuned</span>
               </h1>
-              <p className="text-xs text-gray-500">Music Rights Management</p>
+              <p className="text-xs text-gray-400">Music Rights Management</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <EqualizerBars />
-            <motion.div 
-              className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-amber-500 flex items-center justify-center text-sm font-bold shadow-lg shadow-purple-500/30"
+            <motion.div
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-[#e63946] via-[#f472b6] to-[#7eb8da] flex items-center justify-center text-sm font-bold shadow-lg shadow-red-500/30"
               whileHover={{ scale: 1.05 }}
             >
               {profile.artistName?.[0]?.toUpperCase() || 'R'}
@@ -279,7 +285,7 @@ export default function App() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
                   activeTab === tab.id
-                    ? 'bg-gradient-to-r from-purple-600 via-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30'
+                    ? 'bg-gradient-to-r from-[#e63946] via-[#f472b6] to-[#7eb8da] text-white shadow-lg shadow-red-500/30'
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
                 whileHover={{ scale: 1.02 }}
