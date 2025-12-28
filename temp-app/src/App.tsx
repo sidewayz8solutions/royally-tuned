@@ -16,6 +16,7 @@ const AnimatedCounter = ({ value, prefix = '', suffix = '', decimals = 0 }: { va
   const [count, setCount] = useState(value);
   useEffect(() => {
     if (value === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCount(0);
       return;
     }
@@ -41,7 +42,7 @@ const AnimatedCounter = ({ value, prefix = '', suffix = '', decimals = 0 }: { va
 const BrandLogo = () => (
   <div className="flex items-center gap-3">
     <img
-      src="/logo.png"
+      src="/rt1.png"
       alt="Royally Tuned"
       className="w-12 h-12 object-contain"
       onError={(e) => {
@@ -53,7 +54,7 @@ const BrandLogo = () => (
 );
 
 // Floating Orb Component
-const FloatingOrb = ({ delay = 0, size = 'lg', color = 'purple' }: { delay?: number; size?: string; color?: string }) => {
+const FloatingOrb = ({ delay = 0, size = 'lg', color = 'dark red' }: { delay?: number; size?: string; color?: string }) => {
   const sizeClasses: Record<string, string> = {
     sm: 'w-32 h-32',
     md: 'w-48 h-48',
@@ -100,13 +101,13 @@ const EqualizerBars = () => (
 
 // Color schemes for different elements - Royally Tuned Brand (Purple/Magenta/Blue)
 const kpiColors = [
-  { bg: 'from-purple-600/20 to-purple-600/10', icon: 'text-purple-500', glow: 'shadow-purple-600/20' },
+  { bg: 'from-red-600/20 to-red-600/10', icon: 'text-red-500', glow: 'shadow-red-600/20' },
   { bg: 'from-purple-500/20 to-purple-600/10', icon: 'text-purple-400', glow: 'shadow-purple-500/20' },
   { bg: 'from-sky-400/20 to-sky-500/10', icon: 'text-sky-400', glow: 'shadow-sky-400/20' },
   { bg: 'from-emerald-500/20 to-emerald-600/10', icon: 'text-emerald-400', glow: 'shadow-emerald-500/20' },
 ];
 
-const chartColors = ['#c026d3', '#e879f9', '#7dd3fc', '#22c55e', '#f5f0e6'];
+const chartColors = ['#860202', '#e879f9', '#7dd3fc', '#22c55e', '#f5f0e6'];
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -285,7 +286,7 @@ export default function App() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
                   activeTab === tab.id
-                    ? 'bg-gradient-to-r from-purple-600 via-purple-500 to-sky-400 text-white shadow-lg shadow-purple-600/30'
+                    ? 'bg-gradient-to-r from-red-600 via-red-500 to-sky-400 text-white shadow-lg shadow-purple-600/30'
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
                 whileHover={{ scale: 1.02 }}
@@ -382,8 +383,8 @@ export default function App() {
                       </ResponsiveContainer>
                     </div>
                     <div className="flex gap-4 mt-4 justify-center">
-                      <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-purple-600" /><span className="text-xs text-gray-400">Master</span></div>
-                      <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-purple-500" /><span className="text-xs text-gray-400">Mechanical</span></div>
+                      <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-700" /><span className="text-xs text-gray-400">Master</span></div>
+                      <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-purple-900" /><span className="text-xs text-gray-400">Mechanical</span></div>
                       <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-green-500" /><span className="text-xs text-gray-400">Performance</span></div>
                     </div>
                   </div>
