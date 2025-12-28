@@ -1,15 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Music, DollarSign, TrendingUp, Users, Crown,
   Plus, ChevronDown, ChevronUp, ExternalLink, Download,
   CheckCircle2, Circle, Calculator, Sparkles, BarChart3,
   Mic2, FileText, Settings, Home, ListMusic, Zap,
-  Play, Award, Target, Disc3
+  Play, Award, Target, Disc3, Upload, X, AlertCircle, Loader2,
+  CreditCard, LogIn, LogOut, User
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import type { Profile, Track, Split } from './types';
 import { defaultProfile, defaultTracks, monthlyRevenueData, platformStats, registrationSteps, proOptions, distributorOptions } from './data';
+import { parseRoyaltyStatement, isAPIKeyConfigured, type ParsedStatement, type ParsedTrack } from './services/openai';
+import Login from './pages/Login';
+import Billing from './pages/Billing';
+import { useAuth } from './contexts/AuthContext';
+import { supabase } from './lib/supabaseClient';
 
 // Animated Counter Component
 const AnimatedCounter = ({ value, prefix = '', suffix = '', decimals = 0 }: { value: number; prefix?: string; suffix?: string; decimals?: number }) => {
@@ -62,8 +68,8 @@ function FloatingOrb({ delay = 0, size = 'lg', color = 'red-100' }: { delay?: nu
     xl: 'w-96 h-96'
   };
   const colorClasses: Record<string, string> = {
-    purple: 'from-red-700/20 via-red-700/10 to-transparent',
-    magenta: 'from-red-600/15 via-red-500/5 to-transparent',
+    purple: 'from-purple-700/20 via-red-700/10 to-transparent',
+    magenta: 'from-purple-600/15 via-red-500/5 to-transparent',
     blue: 'from-sky-400/10 via-sky-300/5 to-transparent',
     cream: 'from-amber-100/10 via-amber-50/5 to-transparent'
   };
@@ -90,7 +96,7 @@ const EqualizerBars = () => (
     {[0.6, 1, 0.4, 0.8, 0.5].map((height, i) => (
       <motion.div
         key={i}
-        className="w-1 bg-gradient-to-t from-red-700 via-purple-600 to-orange-400 rounded-full"
+        className="w-1 bg-gradient-to-t from-purple-700 via-purple-600 to-purple-400 rounded-full"
         animate={{ height: [`${height * 100}%`, '100%', `${height * 60}%`] }}
         transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.1 }}
       />
@@ -100,8 +106,8 @@ const EqualizerBars = () => (
 
 // Color schemes for different elements - Royally Tuned Brand (Purple/Magenta/Blue)
 const kpiColors = [
-  { bg: 'from-red-600/20 to-red-600/10', icon: 'text-red-500', glow: 'shadow-red-600/20' },
-  { bg: 'from-yellow-700/20 to-yellow-800/10', icon: 'text-red-400', glow: 'shadow-yellow-700/20' },
+  { bg: 'from-purple-600/20 to-purple-600/10', icon: 'text-red-500', glow: 'shadow-red-600/20' },
+  { bg: 'from-yellow-700/20 to-yellow-800/10', icon: 'text-purple-400', glow: 'shadow-yellow-700/20' },
   { bg: 'from-sky-400/20 to-sky-500/10', icon: 'text-sky-400', glow: 'shadow-sky-400/20' },
   { bg: 'from-emerald-500/20 to-emerald-600/10', icon: 'text-emerald-400', glow: 'shadow-emerald-500/20' },
 ];
@@ -109,6 +115,7 @@ const kpiColors = [
 const chartColors = ['#860202', '#e879f9', '#7dd3fc', '#22c55e', '#f5f0e6'];
 
 export default function App() {
+  const { user, subscriptionStatus, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [profile, setProfile] = useState<Profile>(() => {
     const saved = localStorage.getItem('royallytuned-profile');
@@ -120,6 +127,28 @@ export default function App() {
   });
   const [expandedTrack, setExpandedTrack] = useState<string | null>(null);
   const [streamCount, setStreamCount] = useState(100000);
+
+  // Upload & AI parsing state
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [parsedData, setParsedData] = useState<ParsedStatement | null>(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement | null>(null);
+
+  // Close account menu on outside click
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      if (!showAccountMenu) return;
+      const target = e.target as Node | null;
+      if (accountMenuRef.current && target && !accountMenuRef.current.contains(target)) {
+        setShowAccountMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, [showAccountMenu]);
 
   // Persist data
   useEffect(() => {
@@ -142,6 +171,8 @@ export default function App() {
     { id: 'checklist', label: 'Checklist', icon: CheckCircle2 },
     { id: 'toolkit', label: 'Toolkit', icon: Calculator },
     { id: 'profile', label: 'Profile', icon: Settings },
+    ...(user ? [] : [{ id: 'login', label: 'Login', icon: LogIn }]),
+    { id: 'billing', label: 'Billing', icon: CreditCard },
   ];
 
   // Add new track
@@ -215,6 +246,84 @@ export default function App() {
     a.click();
   };
 
+  // File upload and AI parsing
+  const handleFileUpload = useCallback(async (file: File) => {
+    if (!isAPIKeyConfigured()) {
+      setUploadError('OpenAI API key not configured. Add VITE_OPENAI_API_KEY to your .env file.');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      let content = '';
+      const fileType = file.name.toLowerCase().endsWith('.csv') ? 'csv' :
+                       file.name.toLowerCase().endsWith('.pdf') ? 'pdf' : 'text';
+
+      if (fileType === 'csv' || fileType === 'text') {
+        content = await file.text();
+      } else if (fileType === 'pdf') {
+        // For PDF, we read as text (basic extraction) - for better results, use a PDF library
+        content = await file.text();
+        if (!content || content.length < 50) {
+          setUploadError('PDF parsing requires text-based PDFs. Try exporting as CSV from your distributor.');
+          setIsUploading(false);
+          return;
+        }
+      }
+
+      const parsed = await parseRoyaltyStatement(content, fileType);
+      setParsedData(parsed);
+      setShowReviewModal(true);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Failed to parse statement');
+    } finally {
+      setIsUploading(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFileUpload(file);
+  }, [handleFileUpload]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  const importParsedTracks = () => {
+    if (!parsedData) return;
+
+    const newTracks: Track[] = parsedData.tracks.map((pt: ParsedTrack) => ({
+      id: crypto.randomUUID(),
+      title: pt.title,
+      isrc: pt.isrc || '',
+      iswc: '',
+      upc: '',
+      releaseDate: '',
+      creationYear: new Date().getFullYear(),
+      copyrightNumber: '',
+      completedSteps: [],
+      splits: [{ id: '1', name: 'You', role: 'Writer', share: 100 }],
+      streams: pt.streams || 0,
+      revenue: pt.revenue || 0,
+      genre: pt.genre || '',
+      platform: pt.platform || parsedData.distributor,
+    }));
+
+    setTracks(prev => [...prev, ...newTracks]);
+    setShowReviewModal(false);
+    setParsedData(null);
+  };
+
   // Royalty calculation
   const calculateRoyalties = (streams: number) => ({
     master: streams * 0.0035,
@@ -224,6 +333,32 @@ export default function App() {
   });
 
   const royalties = calculateRoyalties(streamCount);
+  const isSubActive = subscriptionStatus === 'active' || subscriptionStatus === 'trialing';
+
+  // Account actions
+  const postJson = async (path: string, body: any) => {
+    const res = await fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  };
+
+  const openBillingPortal = async () => {
+    if (!user || !supabase) return;
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      const { url } = await postJson('/api/create-portal-session', {
+        userId: user.id,
+        accessToken: session.session?.access_token,
+      });
+      window.location.href = url;
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Failed to open billing portal');
+    }
+  };
 
   // Page transition
   const pageVariants = {
@@ -266,13 +401,90 @@ export default function App() {
             </div>
           </div>
           <div className="flex items-center gap-4">
+            {user && isSubActive && (
+              <span className="px-2 py-1 rounded-lg text-xs font-semibold bg-purple-600/20 text-purple-300 border border-purple-600/30">
+                PRO
+              </span>
+            )}
             <EqualizerBars />
-            <motion.div
-              className="w-10 h-10 rounded-full bg-gradient-to-br from-puple-700 via-purple-600 to-yellow-300 flex items-center justify-center text-sm font-bold shadow-lg shadow-red-700/30"
-              whileHover={{ scale: 1.05 }}
-            >
-              {profile.artistName?.[0]?.toUpperCase() || 'R'}
-            </motion.div>
+            <div className="relative" ref={accountMenuRef}>
+              <motion.button
+                onClick={() => setShowAccountMenu((s) => !s)}
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-700 via-purple-600 to-purple-400 flex items-center justify-center text-sm font-bold shadow-lg shadow-purple-700/30"
+                whileHover={{ scale: 1.05 }}
+              >
+                {user?.email ? user.email[0]?.toUpperCase() : (profile.artistName?.[0]?.toUpperCase() || 'R')}
+              </motion.button>
+              <AnimatePresence>
+                {showAccountMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    className="absolute right-0 mt-2 w-72 glass-card rounded-xl p-3 border border-purple-700/20 bg-black/70 backdrop-blur"
+                  >
+                    <div className="flex items-center gap-3 p-2">
+                      <div className="w-9 h-9 rounded-full bg-purple-700/40 flex items-center justify-center">
+                        <User className="w-4 h-4 text-purple-300" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-white truncate">{user?.email || 'Guest'}</p>
+                        <p className="text-xs text-gray-500">{isSubActive ? 'Pro active' : 'Free'}</p>
+                      </div>
+                      {user && isSubActive && (
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-purple-600/20 text-purple-300 border border-purple-600/30">PRO</span>
+                      )}
+                    </div>
+                    <div className="h-px bg-purple-700/20 my-2" />
+                    {user ? (
+                      <div className="space-y-2">
+                        {isSubActive ? (
+                          <button
+                            onClick={() => { setShowAccountMenu(false); openBillingPortal(); }}
+                            className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 flex items-center gap-2"
+                          >
+                            <CreditCard className="w-4 h-4 text-purple-300" />
+                            Manage Billing
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => { setShowAccountMenu(false); setActiveTab('billing'); }}
+                            className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 flex items-center gap-2"
+                          >
+                            <CreditCard className="w-4 h-4 text-purple-300" />
+                            Upgrade to Pro
+                          </button>
+                        )}
+                        <button
+                          onClick={async () => { setShowAccountMenu(false); await signOut(); setActiveTab('login'); }}
+                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 flex items-center gap-2"
+                        >
+                          <LogOut className="w-4 h-4 text-gray-300" />
+                          Sign out
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => { setShowAccountMenu(false); setActiveTab('login'); }}
+                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 flex items-center gap-2"
+                        >
+                          <LogIn className="w-4 h-4 text-gray-300" />
+                          Sign in
+                        </button>
+                        <button
+                          onClick={() => { setShowAccountMenu(false); setActiveTab('billing'); }}
+                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 flex items-center gap-2"
+                        >
+                          <CreditCard className="w-4 h-4 text-purple-300" />
+                          Upgrade to Pro
+                        </button>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </header>
 
@@ -285,7 +497,7 @@ export default function App() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
                   activeTab === tab.id
-                    ? 'bg-gradient-to-r from-red-700 via-red-600 to-red-400 text-white shadow-lg shadow-red-700/30'
+                    ? 'bg-gradient-to-r from-purple-700 via-purple-600 to-purple-400 text-white shadow-lg shadow-purple-700/30'
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
                 whileHover={{ scale: 1.02 }}
@@ -382,7 +594,7 @@ export default function App() {
                       </ResponsiveContainer>
                     </div>
                     <div className="flex gap-4 mt-4 justify-center">
-                      <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-700" /><span className="text-xs text-gray-400">Master</span></div>
+                      <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-purple-700" /><span className="text-xs text-gray-400">Master</span></div>
                       <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-900" /><span className="text-xs text-gray-400">Mechanical</span></div>
                       <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-green-500" /><span className="text-xs text-gray-400">Performance</span></div>
                     </div>
@@ -439,7 +651,7 @@ export default function App() {
                     </h3>
                     <button
                       onClick={() => setActiveTab('tracks')}
-                      className="text-sm text-red-500 hover:text-red-400 transition-colors"
+                      className="text-sm text-red-500 hover:text-purple-400 transition-colors"
                     >
                       View All →
                     </button>
@@ -454,11 +666,11 @@ export default function App() {
                         transition={{ delay: i * 0.1 }}
                       >
                         <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${['from-purple-700 to-purple-500', 'from-blue-700 to-blue-500', 'from-red-400 to-red-800'][i % 3]} flex items-center justify-center shadow-lg`}>
+                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${['from-purple-700 to-purple-500', 'from-blue-700 to-blue-500', 'from-purple-600 to-purple-800'][i % 3]} flex items-center justify-center shadow-lg`}>
                             <Play className="w-5 h-5 text-white" />
                           </div>
                           <div>
-                            <h4 className="font-medium text-white group-hover:text-red-400 transition-colors">{track.title}</h4>
+                            <h4 className="font-medium text-white group-hover:text-purple-400 transition-colors">{track.title}</h4>
                             <p className="text-xs text-gray-500">{track.isrc || 'No ISRC'} • {track.genre || 'Unknown'}</p>
                           </div>
                         </div>
@@ -483,7 +695,7 @@ export default function App() {
                   </h2>
                   <motion.button
                     onClick={addTrack}
-                    className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-red-700 via-red-600 to-red-500 rounded-xl font-medium shadow-lg shadow-red-700/30"
+                    className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-purple-700 via-purple-600 to-purple-500 rounded-xl font-medium shadow-lg shadow-purple-700/30"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -507,14 +719,14 @@ export default function App() {
                         onClick={() => setExpandedTrack(expandedTrack === track.id ? null : track.id)}
                       >
                         <div className="flex items-center gap-4">
-                          <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${['from-red-700 to-red-500', 'from-rose-700 to-rose-500', 'from-red-800 to-orange-600'][i % 3]} flex items-center justify-center shadow-lg`}>
+                          <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${['from-purple-700 to-purple-500', 'from-purple-600 to-purple-400', 'from-purple-700 to-purple-500'][i % 3]} flex items-center justify-center shadow-lg`}>
                             <Mic2 className="w-6 h-6 text-white" />
                           </div>
                           <div>
                             <h3 className="font-semibold text-lg text-white">{track.title}</h3>
                             <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
                               {track.isrc && <span className="font-mono">{track.isrc}</span>}
-                              {track.genre && <span className="px-2 py-0.5 rounded-full bg-red-700/20 text-red-400">{track.genre}</span>}
+                              {track.genre && <span className="px-2 py-0.5 rounded-full bg-purple-700/20 text-purple-400">{track.genre}</span>}
                             </div>
                           </div>
                         </div>
@@ -539,7 +751,7 @@ export default function App() {
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
                             transition={{ duration: 0.3 }}
-                            className="border-t border-red-700/10"
+                            className="border-t border-purple-700/10"
                           >
                             <div className="p-6 space-y-6">
                               {/* Track Details */}
@@ -550,7 +762,7 @@ export default function App() {
                                     type="text"
                                     value={track.title}
                                     onChange={(e) => updateTrack(track.id, { title: e.target.value })}
-                                    className="w-full bg-black/50 border border-red-700/20 rounded-lg px-3 py-2 text-sm focus:border-red-600 focus:outline-none transition-colors"
+                                    className="w-full bg-black/50 border border-purple-700/20 rounded-lg px-3 py-2 text-sm focus:border-red-600 focus:outline-none transition-colors"
                                   />
                                 </div>
                                 <div>
@@ -589,12 +801,12 @@ export default function App() {
                               <div>
                                 <div className="flex items-center justify-between mb-4">
                                   <h4 className="font-medium text-gray-300 flex items-center gap-2">
-                                    <Users className="w-4 h-4 text-red-400" />
+                                    <Users className="w-4 h-4 text-purple-400" />
                                     Splits
                                   </h4>
                                   <button
                                     onClick={() => addSplit(track.id)}
-                                    className="text-sm text-red-400 hover:text-red-300 flex items-center gap-1"
+                                    className="text-sm text-purple-400 hover:text-red-300 flex items-center gap-1"
                                   >
                                     <Plus className="w-4 h-4" />
                                     Add Split
@@ -602,7 +814,7 @@ export default function App() {
                                 </div>
                                 <div className="space-y-3">
                                   {track.splits.map((split, si) => (
-                                    <div key={split.id} className="flex items-center gap-3 p-3 rounded-xl bg-black/40 border border-red-700/10">
+                                    <div key={split.id} className="flex items-center gap-3 p-3 rounded-xl bg-black/40 border border-purple-700/10">
                                       <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: `${chartColors[si % chartColors.length]}30`, color: chartColors[si % chartColors.length] }}>
                                         {split.name?.[0]?.toUpperCase() || '?'}
                                       </div>
@@ -616,7 +828,7 @@ export default function App() {
                                       <select
                                         value={split.role}
                                         onChange={(e) => updateSplit(track.id, split.id, { role: e.target.value as Split['role'] })}
-                                        className="bg-black/50 border border-red-700/20 rounded-lg px-2 py-1 text-xs focus:outline-none"
+                                        className="bg-black/50 border border-purple-700/20 rounded-lg px-2 py-1 text-xs focus:outline-none"
                                       >
                                         <option value="Writer">Writer</option>
                                         <option value="Producer">Producer</option>
@@ -629,7 +841,7 @@ export default function App() {
                                           type="number"
                                           value={split.share}
                                           onChange={(e) => updateSplit(track.id, split.id, { share: Number(e.target.value) })}
-                                          className="w-16 bg-black/50 border border-red-700/20 rounded-lg px-2 py-1 text-sm text-center focus:outline-none"
+                                          className="w-16 bg-black/50 border border-purple-700/20 rounded-lg px-2 py-1 text-sm text-center focus:outline-none"
                                           min="0"
                                           max="100"
                                         />
@@ -638,7 +850,7 @@ export default function App() {
                                       {track.splits.length > 1 && (
                                         <button
                                           onClick={() => removeSplit(track.id, split.id)}
-                                          className="text-gray-500 hover:text-red-400 transition-colors text-lg"
+                                          className="text-gray-500 hover:text-purple-400 transition-colors text-lg"
                                         >
                                           ×
                                         </button>
@@ -648,7 +860,7 @@ export default function App() {
                                 </div>
                                 <div className="mt-3 flex items-center justify-between text-sm">
                                   <span className="text-gray-500">Total</span>
-                                  <span className={`font-bold ${track.splits.reduce((s, sp) => s + sp.share, 0) === 100 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                  <span className={`font-bold ${track.splits.reduce((s, sp) => s + sp.share, 0) === 100 ? 'text-emerald-400' : 'text-purple-400'}`}>
                                     {track.splits.reduce((s, sp) => s + sp.share, 0)}%
                                   </span>
                                 </div>
@@ -668,7 +880,7 @@ export default function App() {
                                       className={`p-3 rounded-xl border transition-all text-left ${
                                         track.completedSteps.includes(step.id)
                                           ? 'border-emerald-500/40 bg-emerald-500/10'
-                                          : 'bg-black/30 border-red-700/10 hover:border-red-700/30'
+                                          : 'bg-black/30 border-purple-700/10 hover:border-purple-700/30'
                                       }`}
                                     >
                                       <div className="flex items-center gap-2 mb-1">
@@ -697,7 +909,7 @@ export default function App() {
             {activeTab === 'checklist' && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold flex items-center gap-3">
-                  <Target className="w-7 h-7 text-red-400" />
+                  <Target className="w-7 h-7 text-purple-400" />
                   Registration Hub
                 </h2>
 
@@ -708,7 +920,7 @@ export default function App() {
                       href={step.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="glass-card rounded-2xl p-5 group hover:border-red-700/40 transition-all"
+                      className="glass-card rounded-2xl p-5 group hover:border-purple-700/40 transition-all"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.05 }}
@@ -720,7 +932,7 @@ export default function App() {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
-                            <h3 className="font-semibold text-white group-hover:text-red-400 transition-colors">{step.title}</h3>
+                            <h3 className="font-semibold text-white group-hover:text-purple-400 transition-colors">{step.title}</h3>
                             <ExternalLink className="w-4 h-4 text-gray-500 group-hover:text-red-500 transition-colors" />
                           </div>
                           <p className="text-sm text-gray-400 mb-2">{step.description}</p>
@@ -740,6 +952,86 @@ export default function App() {
                   <Award className="w-7 h-7 text-amber-400" />
                   Royalty Toolkit
                 </h2>
+
+                {/* AI Statement Parser */}
+                <div className="glass-card rounded-2xl p-6">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-purple-400" />
+                    AI Statement Parser
+                  </h3>
+                  <p className="text-sm text-gray-400 mb-4">
+                    Upload royalty statements from DistroKid, TuneCore, CD Baby, Spotify, Apple Music, ASCAP, BMI, and more. AI will extract your track data automatically.
+                  </p>
+
+                  {isSubActive ? (
+                    <>
+                      <div
+                        onDrop={handleDrop}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all ${
+                          isDragging
+                            ? 'border-purple-500 bg-purple-500/10'
+                            : 'border-purple-700/30 hover:border-purple-500/50'
+                        }`}
+                      >
+                        {isUploading ? (
+                          <div className="flex flex-col items-center gap-3">
+                            <Loader2 className="w-10 h-10 text-purple-400 animate-spin" />
+                            <p className="text-gray-400">Parsing statement with AI...</p>
+                          </div>
+                        ) : (
+                          <>
+                            <Upload className="w-10 h-10 text-purple-400 mx-auto mb-3" />
+                            <p className="text-gray-300 font-medium mb-1">Drag & drop your royalty statement</p>
+                            <p className="text-sm text-gray-500 mb-4">Supports CSV, PDF, TXT files</p>
+                            <label className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-xl cursor-pointer transition-colors">
+                              <FileText className="w-4 h-4" />
+                              Browse Files
+                              <input
+                                type="file"
+                                accept=".csv,.pdf,.txt"
+                                onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+                                className="hidden"
+                              />
+                            </label>
+                          </>
+                        )}
+                      </div>
+
+                      {uploadError && (
+                        <div className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-3">
+                          <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-red-400 font-medium">Upload Error</p>
+                            <p className="text-sm text-red-300/70">{uploadError}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {!isAPIKeyConfigured() && (
+                        <div className="mt-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3">
+                          <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-amber-400 font-medium">API Key Required</p>
+                            <p className="text-sm text-amber-300/70">Add your OpenAI API key to .env file as VITE_OPENAI_API_KEY</p>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="p-6 rounded-xl bg-black/40 border border-purple-700/20">
+                      <p className="text-gray-300 font-medium mb-2">Pro feature</p>
+                      <p className="text-sm text-gray-400 mb-4">Upgrade to import and parse royalty statements with AI.</p>
+                      <button
+                        onClick={() => setActiveTab('billing')}
+                        className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white"
+                      >
+                        Go to Billing
+                      </button>
+                    </div>
+                  )}
+                </div>
 
                 <div className="glass-card rounded-2xl p-6">
                   <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
@@ -794,7 +1086,7 @@ export default function App() {
                   <div className="flex flex-wrap gap-3">
                     <motion.button
                       onClick={exportCSV}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-700/20 to-red-600/20 text-red-400 hover:from-red-700/30 hover:to-red-600/30 transition-colors border border-red-700/20"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-700/20 to-purple-600/20 text-purple-400 hover:from-purple-700/30 hover:to-purple-600/30 transition-colors border border-purple-700/20"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -803,6 +1095,34 @@ export default function App() {
                     </motion.button>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Login */}
+            {activeTab === 'login' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold flex items-center gap-3">
+                  <LogIn className="w-7 h-7 text-purple-400" />
+                  Login
+                </h2>
+                <Login />
+              </div>
+            )}
+
+            {/* Billing */}
+            {activeTab === 'billing' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold flex items-center gap-3">
+                  <CreditCard className="w-7 h-7 text-purple-400" />
+                  Billing
+                </h2>
+                {user ? (
+                  <Billing />
+                ) : (
+                  <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                    <p className="text-amber-300 text-sm">Please log in to manage your subscription.</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -822,7 +1142,7 @@ export default function App() {
                         type="text"
                         value={profile.legalName}
                         onChange={(e) => setProfile({ ...profile, legalName: e.target.value })}
-                        className="w-full bg-black/50 border border-red-700/20 rounded-xl px-4 py-3 focus:border-red-600 focus:outline-none transition-colors"
+                        className="w-full bg-black/50 border border-purple-700/20 rounded-xl px-4 py-3 focus:border-red-600 focus:outline-none transition-colors"
                         placeholder="Your legal name"
                       />
                     </div>
@@ -861,7 +1181,7 @@ export default function App() {
                       <select
                         value={profile.pro}
                         onChange={(e) => setProfile({ ...profile, pro: e.target.value })}
-                        className="w-full bg-black/50 border border-red-700/20 rounded-xl px-4 py-3 focus:border-red-600 focus:outline-none transition-colors"
+                        className="w-full bg-black/50 border border-purple-700/20 rounded-xl px-4 py-3 focus:border-red-600 focus:outline-none transition-colors"
                       >
                         {proOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                       </select>
@@ -878,9 +1198,9 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div className="mt-6 pt-6 border-t border-red-700/10">
+                  <div className="mt-6 pt-6 border-t border-purple-700/10">
                     <label className="flex items-center gap-3 cursor-pointer">
-                      <div className={`w-12 h-6 rounded-full transition-colors ${profile.isSelfPublished ? 'bg-gradient-to-r from-red-700 to-red-500' : 'bg-gray-700'}`}>
+                      <div className={`w-12 h-6 rounded-full transition-colors ${profile.isSelfPublished ? 'bg-gradient-to-r from-purple-700 to-purple-500' : 'bg-gray-700'}`}>
                         <motion.div
                           className="w-6 h-6 rounded-full bg-white shadow-lg"
                           animate={{ x: profile.isSelfPublished ? 24 : 0 }}
@@ -897,7 +1217,7 @@ export default function App() {
         </AnimatePresence>
 
         {/* Footer */}
-        <footer className="mt-12 py-6 border-t border-red-700/10 text-center">
+        <footer className="mt-12 py-6 border-t border-purple-700/10 text-center">
           <p className="text-sm text-gray-600 flex items-center justify-center gap-2">
             <Crown className="w-4 h-4 text-yellow-300" />
             <span className="gradient-text font-medium">Royally Tuned</span>
@@ -905,6 +1225,95 @@ export default function App() {
           </p>
         </footer>
       </div>
+
+      {/* Review Modal */}
+      <AnimatePresence>
+        {showReviewModal && parsedData && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowReviewModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="glass-card rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-xl font-bold flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-purple-400" />
+                    Review Imported Data
+                  </h3>
+                  <p className="text-sm text-gray-400 mt-1">
+                    From {parsedData.distributor} • {parsedData.period}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowReviewModal(false)}
+                  className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="mb-6 p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Total Revenue</span>
+                  <span className="text-xl font-bold text-purple-400">
+                    ${parsedData.totalRevenue.toLocaleString()}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500 mt-2">{parsedData.rawSummary}</p>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <h4 className="text-sm font-medium text-gray-400">
+                  {parsedData.tracks.length} Tracks Found
+                </h4>
+                {parsedData.tracks.map((track, i) => (
+                  <div key={i} className="p-4 rounded-xl bg-black/40 border border-purple-700/20">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-white">{track.title}</p>
+                        <p className="text-xs text-gray-500">
+                          {track.isrc || 'No ISRC'} • {track.platform || 'Unknown platform'}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-emerald-400">${(track.revenue || 0).toFixed(2)}</p>
+                        <p className="text-xs text-gray-500">
+                          {(track.streams || 0).toLocaleString()} streams
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowReviewModal(false)}
+                  className="flex-1 px-4 py-3 rounded-xl border border-gray-600 text-gray-400 hover:bg-white/5 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={importParsedTracks}
+                  className="flex-1 px-4 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  Import {parsedData.tracks.length} Tracks
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
