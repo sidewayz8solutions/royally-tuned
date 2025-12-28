@@ -47,14 +47,14 @@ const BrandLogo = () => (
       className="w-12 h-12 object-contain"
       onError={(e) => {
         // Fallback to crown SVG if logo.png doesn't exist
-        (e.target as HTMLImageElement).src = '/public/rt1.png';
+        (e.target as HTMLImageElement).src = 'rt1.png';
       }}
     />
   </div>
 );
 
 // Floating Orb Component
-const FloatingOrb = ({ delay = 0, size = 'lg', color = 'dark red' }: { delay?: number; size?: string; color?: string }) => {
+function FloatingOrb({ delay = 0, size = 'lg', color = 'red-300' }: { delay?: number; size?: string; color?: string; }) {
   const sizeClasses: Record<string, string> = {
     sm: 'w-32 h-32',
     md: 'w-48 h-48',
@@ -62,8 +62,8 @@ const FloatingOrb = ({ delay = 0, size = 'lg', color = 'dark red' }: { delay?: n
     xl: 'w-96 h-96'
   };
   const colorClasses: Record<string, string> = {
-    purple: 'from-purple-600/20 via-purple-600/10 to-transparent',
-    magenta: 'from-purple-500/15 via-purple-400/5 to-transparent',
+    purple: 'from-red-700/20 via-red-700/10 to-transparent',
+    magenta: 'from-red-600/15 via-red-500/5 to-transparent',
     blue: 'from-sky-400/10 via-sky-300/5 to-transparent',
     cream: 'from-amber-100/10 via-amber-50/5 to-transparent'
   };
@@ -80,10 +80,9 @@ const FloatingOrb = ({ delay = 0, size = 'lg', color = 'dark red' }: { delay?: n
         repeat: Infinity,
         delay,
         ease: "easeInOut"
-      }}
-    />
+      }} />
   );
-};
+}
 
 // Equalizer Bars Animation
 const EqualizerBars = () => (
@@ -91,7 +90,7 @@ const EqualizerBars = () => (
     {[0.6, 1, 0.4, 0.8, 0.5].map((height, i) => (
       <motion.div
         key={i}
-        className="w-1 bg-gradient-to-t from-purple-600 via-purple-500 to-sky-400 rounded-full"
+        className="w-1 bg-gradient-to-t from-red-700 via-red-600 to-orange-400 rounded-full"
         animate={{ height: [`${height * 100}%`, '100%', `${height * 60}%`] }}
         transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.1 }}
       />
@@ -102,7 +101,7 @@ const EqualizerBars = () => (
 // Color schemes for different elements - Royally Tuned Brand (Purple/Magenta/Blue)
 const kpiColors = [
   { bg: 'from-red-600/20 to-red-600/10', icon: 'text-red-500', glow: 'shadow-red-600/20' },
-  { bg: 'from-purple-500/20 to-purple-600/10', icon: 'text-purple-400', glow: 'shadow-purple-500/20' },
+  { bg: 'from-red-700/20 to-red-800/10', icon: 'text-red-400', glow: 'shadow-red-700/20' },
   { bg: 'from-sky-400/20 to-sky-500/10', icon: 'text-sky-400', glow: 'shadow-sky-400/20' },
   { bg: 'from-emerald-500/20 to-emerald-600/10', icon: 'text-emerald-400', glow: 'shadow-emerald-500/20' },
 ];
@@ -240,11 +239,11 @@ export default function App() {
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
       {/* Animated Background */}
       <div className="fixed inset-0 pointer-events-none mesh-bg">
-        <FloatingOrb delay={0} size="xl" color="purple" />
-        <FloatingOrb delay={2} size="lg" color="magenta" />
-        <FloatingOrb delay={4} size="md" color="blue" />
+        <FloatingOrb delay={0} size="xl" color="red-300" />
+        <FloatingOrb delay={2} size="lg" color="red-300" />
+        <FloatingOrb delay={4} size="md" color="blue-300" />
         <div className="absolute top-1/4 right-1/4">
-          <FloatingOrb delay={1} size="lg" color="cream" />
+          <FloatingOrb delay={1} size="lg" color="amber-100" />
         </div>
         <div className="absolute bottom-1/4 left-1/3">
           <FloatingOrb delay={3} size="md" color="purple" />
@@ -259,7 +258,7 @@ export default function App() {
           <div className="flex items-center gap-4">
             <BrandLogo />
             <div>
-              <h1 className="text-2xl font-bold tracking-tight brand-script neon-purple">
+              <h1 className="text-2xl font-bold tracking-tight brand-script neon-purple" style={{ textShadow: '0 4px 12px rgba(0, 0, 0, 0.8), 0 2px 4px rgba(0, 0, 0, 0.6)' }}>
                 <span className="text-red-700">Royally</span>
                 <span className="text-white ml-1">Tuned</span>
               </h1>
@@ -269,7 +268,7 @@ export default function App() {
           <div className="flex items-center gap-4">
             <EqualizerBars />
             <motion.div
-              className="w-10 h-10 rounded-full bg-gradient-to-br from-red-600 via-purple-500 to-sky-400 flex items-center justify-center text-sm font-bold shadow-lg shadow-purple-600/30"
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-red-700 via-red-600 to-orange-500 flex items-center justify-center text-sm font-bold shadow-lg shadow-red-700/30"
               whileHover={{ scale: 1.05 }}
             >
               {profile.artistName?.[0]?.toUpperCase() || 'R'}
@@ -286,7 +285,7 @@ export default function App() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
                   activeTab === tab.id
-                    ? 'bg-gradient-to-r from-red-700 via-red-600 to-red-400 text-white shadow-lg shadow-purple-600/30'
+                    ? 'bg-gradient-to-r from-red-700 via-red-600 to-red-400 text-white shadow-lg shadow-red-700/30'
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
                 whileHover={{ scale: 1.02 }}
@@ -348,7 +347,7 @@ export default function App() {
                   <div className="lg:col-span-2 glass-card rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-6">
                       <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <BarChart3 className="w-5 h-5 text-purple-500" />
+                        <BarChart3 className="w-5 h-5 text-red-500" />
                         Revenue Trend
                       </h3>
                       <span className="text-xs text-gray-500">Last 6 months</span>
@@ -384,7 +383,7 @@ export default function App() {
                     </div>
                     <div className="flex gap-4 mt-4 justify-center">
                       <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-700" /><span className="text-xs text-gray-400">Master</span></div>
-                      <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-purple-900" /><span className="text-xs text-gray-400">Mechanical</span></div>
+                      <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-900" /><span className="text-xs text-gray-400">Mechanical</span></div>
                       <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-green-500" /><span className="text-xs text-gray-400">Performance</span></div>
                     </div>
                   </div>
@@ -435,12 +434,12 @@ export default function App() {
                 <div className="glass-card rounded-2xl p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <Disc3 className="w-5 h-5 text-purple-400" />
+                      <Disc3 className="w-5 h-5 text-red-400" />
                       Recent Tracks
                     </h3>
                     <button
                       onClick={() => setActiveTab('tracks')}
-                      className="text-sm text-purple-500 hover:text-purple-400 transition-colors"
+                      className="text-sm text-red-500 hover:text-red-400 transition-colors"
                     >
                       View All →
                     </button>
@@ -449,17 +448,17 @@ export default function App() {
                     {tracks.slice(0, 3).map((track, i) => (
                       <motion.div
                         key={track.id}
-                        className="flex items-center justify-between p-4 rounded-xl bg-black/40 border border-purple-600/10 hover:border-purple-600/30 transition-all group"
+                        className="flex items-center justify-between p-4 rounded-xl bg-black/40 border border-red-600/10 hover:border-red-600/30 transition-all group"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.1 }}
                       >
                         <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${['from-purple-600 to-purple-400', 'from-purple-700 to-purple-500', 'from-emerald-500 to-cyan-500'][i % 3]} flex items-center justify-center shadow-lg`}>
+                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${['from-red-700 to-red-500', 'from-rose-700 to-rose-500', 'from-red-800 to-orange-600'][i % 3]} flex items-center justify-center shadow-lg`}>
                             <Play className="w-5 h-5 text-white" />
                           </div>
                           <div>
-                            <h4 className="font-medium text-white group-hover:text-purple-400 transition-colors">{track.title}</h4>
+                            <h4 className="font-medium text-white group-hover:text-red-400 transition-colors">{track.title}</h4>
                             <p className="text-xs text-gray-500">{track.isrc || 'No ISRC'} • {track.genre || 'Unknown'}</p>
                           </div>
                         </div>
@@ -479,12 +478,12 @@ export default function App() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h2 className="text-2xl font-bold flex items-center gap-3">
-                    <Music className="w-7 h-7 text-purple-500" />
+                    <Music className="w-7 h-7 text-red-500" />
                     Track Manager
                   </h2>
                   <motion.button
                     onClick={addTrack}
-                    className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-purple-600 via-purple-600 to-purple-400 rounded-xl font-medium shadow-lg shadow-purple-600/30"
+                    className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-red-700 via-red-600 to-red-500 rounded-xl font-medium shadow-lg shadow-red-700/30"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -508,14 +507,14 @@ export default function App() {
                         onClick={() => setExpandedTrack(expandedTrack === track.id ? null : track.id)}
                       >
                         <div className="flex items-center gap-4">
-                          <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${['from-purple-600 to-purple-400', 'from-purple-700 to-purple-500', 'from-emerald-500 to-cyan-500'][i % 3]} flex items-center justify-center shadow-lg`}>
+                          <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${['from-red-700 to-red-500', 'from-rose-700 to-rose-500', 'from-red-800 to-orange-600'][i % 3]} flex items-center justify-center shadow-lg`}>
                             <Mic2 className="w-6 h-6 text-white" />
                           </div>
                           <div>
                             <h3 className="font-semibold text-lg text-white">{track.title}</h3>
                             <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
                               {track.isrc && <span className="font-mono">{track.isrc}</span>}
-                              {track.genre && <span className="px-2 py-0.5 rounded-full bg-purple-600/20 text-purple-400">{track.genre}</span>}
+                              {track.genre && <span className="px-2 py-0.5 rounded-full bg-red-700/20 text-red-400">{track.genre}</span>}
                             </div>
                           </div>
                         </div>
@@ -540,7 +539,7 @@ export default function App() {
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
                             transition={{ duration: 0.3 }}
-                            className="border-t border-purple-600/10"
+                            className="border-t border-red-700/10"
                           >
                             <div className="p-6 space-y-6">
                               {/* Track Details */}
@@ -551,7 +550,7 @@ export default function App() {
                                     type="text"
                                     value={track.title}
                                     onChange={(e) => updateTrack(track.id, { title: e.target.value })}
-                                    className="w-full bg-black/50 border border-purple-600/20 rounded-lg px-3 py-2 text-sm focus:border-purple-600 focus:outline-none transition-colors"
+                                    className="w-full bg-black/50 border border-red-700/20 rounded-lg px-3 py-2 text-sm focus:border-red-600 focus:outline-none transition-colors"
                                   />
                                 </div>
                                 <div>
@@ -590,12 +589,12 @@ export default function App() {
                               <div>
                                 <div className="flex items-center justify-between mb-4">
                                   <h4 className="font-medium text-gray-300 flex items-center gap-2">
-                                    <Users className="w-4 h-4 text-purple-400" />
+                                    <Users className="w-4 h-4 text-red-400" />
                                     Splits
                                   </h4>
                                   <button
                                     onClick={() => addSplit(track.id)}
-                                    className="text-sm text-purple-400 hover:text-pink-300 flex items-center gap-1"
+                                    className="text-sm text-red-400 hover:text-red-300 flex items-center gap-1"
                                   >
                                     <Plus className="w-4 h-4" />
                                     Add Split
@@ -603,7 +602,7 @@ export default function App() {
                                 </div>
                                 <div className="space-y-3">
                                   {track.splits.map((split, si) => (
-                                    <div key={split.id} className="flex items-center gap-3 p-3 rounded-xl bg-black/40 border border-purple-600/10">
+                                    <div key={split.id} className="flex items-center gap-3 p-3 rounded-xl bg-black/40 border border-red-700/10">
                                       <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: `${chartColors[si % chartColors.length]}30`, color: chartColors[si % chartColors.length] }}>
                                         {split.name?.[0]?.toUpperCase() || '?'}
                                       </div>
@@ -617,7 +616,7 @@ export default function App() {
                                       <select
                                         value={split.role}
                                         onChange={(e) => updateSplit(track.id, split.id, { role: e.target.value as Split['role'] })}
-                                        className="bg-black/50 border border-purple-600/20 rounded-lg px-2 py-1 text-xs focus:outline-none"
+                                        className="bg-black/50 border border-red-700/20 rounded-lg px-2 py-1 text-xs focus:outline-none"
                                       >
                                         <option value="Writer">Writer</option>
                                         <option value="Producer">Producer</option>
@@ -630,7 +629,7 @@ export default function App() {
                                           type="number"
                                           value={split.share}
                                           onChange={(e) => updateSplit(track.id, split.id, { share: Number(e.target.value) })}
-                                          className="w-16 bg-black/50 border border-purple-600/20 rounded-lg px-2 py-1 text-sm text-center focus:outline-none"
+                                          className="w-16 bg-black/50 border border-red-700/20 rounded-lg px-2 py-1 text-sm text-center focus:outline-none"
                                           min="0"
                                           max="100"
                                         />
@@ -669,7 +668,7 @@ export default function App() {
                                       className={`p-3 rounded-xl border transition-all text-left ${
                                         track.completedSteps.includes(step.id)
                                           ? 'border-emerald-500/40 bg-emerald-500/10'
-                                          : 'bg-black/30 border-purple-600/10 hover:border-purple-600/30'
+                                          : 'bg-black/30 border-red-700/10 hover:border-red-700/30'
                                       }`}
                                     >
                                       <div className="flex items-center gap-2 mb-1">
@@ -698,7 +697,7 @@ export default function App() {
             {activeTab === 'checklist' && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold flex items-center gap-3">
-                  <Target className="w-7 h-7 text-purple-400" />
+                  <Target className="w-7 h-7 text-red-400" />
                   Registration Hub
                 </h2>
 
@@ -709,7 +708,7 @@ export default function App() {
                       href={step.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="glass-card rounded-2xl p-5 group hover:border-purple-600/40 transition-all"
+                      className="glass-card rounded-2xl p-5 group hover:border-red-700/40 transition-all"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.05 }}
@@ -721,8 +720,8 @@ export default function App() {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
-                            <h3 className="font-semibold text-white group-hover:text-purple-400 transition-colors">{step.title}</h3>
-                            <ExternalLink className="w-4 h-4 text-gray-500 group-hover:text-purple-500 transition-colors" />
+                            <h3 className="font-semibold text-white group-hover:text-red-400 transition-colors">{step.title}</h3>
+                            <ExternalLink className="w-4 h-4 text-gray-500 group-hover:text-red-500 transition-colors" />
                           </div>
                           <p className="text-sm text-gray-400 mb-2">{step.description}</p>
                           <p className="text-xs" style={{ color: stepColors[i % stepColors.length] }}>💡 {step.tip}</p>
@@ -795,7 +794,7 @@ export default function App() {
                   <div className="flex flex-wrap gap-3">
                     <motion.button
                       onClick={exportCSV}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600/20 to-purple-400/20 text-purple-400 hover:from-purple-600/30 hover:to-purple-400/30 transition-colors border border-purple-600/20"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-700/20 to-red-600/20 text-red-400 hover:from-red-700/30 hover:to-red-600/30 transition-colors border border-red-700/20"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -811,7 +810,7 @@ export default function App() {
             {activeTab === 'profile' && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold flex items-center gap-3">
-                  <Settings className="w-7 h-7 text-purple-500" />
+                  <Settings className="w-7 h-7 text-red-500" />
                   Profile Settings
                 </h2>
 
@@ -823,7 +822,7 @@ export default function App() {
                         type="text"
                         value={profile.legalName}
                         onChange={(e) => setProfile({ ...profile, legalName: e.target.value })}
-                        className="w-full bg-black/50 border border-purple-600/20 rounded-xl px-4 py-3 focus:border-purple-600 focus:outline-none transition-colors"
+                        className="w-full bg-black/50 border border-red-700/20 rounded-xl px-4 py-3 focus:border-red-600 focus:outline-none transition-colors"
                         placeholder="Your legal name"
                       />
                     </div>
@@ -862,7 +861,7 @@ export default function App() {
                       <select
                         value={profile.pro}
                         onChange={(e) => setProfile({ ...profile, pro: e.target.value })}
-                        className="w-full bg-black/50 border border-purple-600/20 rounded-xl px-4 py-3 focus:border-purple-600 focus:outline-none transition-colors"
+                        className="w-full bg-black/50 border border-red-700/20 rounded-xl px-4 py-3 focus:border-red-600 focus:outline-none transition-colors"
                       >
                         {proOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                       </select>
@@ -879,9 +878,9 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div className="mt-6 pt-6 border-t border-purple-600/10">
+                  <div className="mt-6 pt-6 border-t border-red-700/10">
                     <label className="flex items-center gap-3 cursor-pointer">
-                      <div className={`w-12 h-6 rounded-full transition-colors ${profile.isSelfPublished ? 'bg-gradient-to-r from-purple-600 to-purple-400' : 'bg-gray-700'}`}>
+                      <div className={`w-12 h-6 rounded-full transition-colors ${profile.isSelfPublished ? 'bg-gradient-to-r from-red-700 to-red-500' : 'bg-gray-700'}`}>
                         <motion.div
                           className="w-6 h-6 rounded-full bg-white shadow-lg"
                           animate={{ x: profile.isSelfPublished ? 24 : 0 }}
@@ -898,9 +897,9 @@ export default function App() {
         </AnimatePresence>
 
         {/* Footer */}
-        <footer className="mt-12 py-6 border-t border-purple-600/10 text-center">
+        <footer className="mt-12 py-6 border-t border-red-700/10 text-center">
           <p className="text-sm text-gray-600 flex items-center justify-center gap-2">
-            <Crown className="w-4 h-4 text-purple-600" />
+            <Crown className="w-4 h-4 text-red-700" />
             <span className="gradient-text font-medium">Royally Tuned</span>
             <span className="text-gray-500">— Own Your Rights</span>
           </p>
