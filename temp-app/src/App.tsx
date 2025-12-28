@@ -259,16 +259,16 @@ export default function App() {
             <BrandLogo />
             <div>
               <h1 className="text-2xl font-bold tracking-tight brand-script neon-purple" style={{ textShadow: '0 4px 12px rgba(0, 0, 0, 0.8), 0 2px 4px rgba(0, 0, 0, 0.6)' }}>
-                <span className="text-red-700">Royally</span>
-                <span className="text-white ml-1">Tuned</span>
+                <span className="text-purple-500">Royally</span>
+                <span className="text-yellow-300 ml-1">Tuned</span>
               </h1>
-              <p className="text-xs text-gray-400">Music Rights Management</p>
+              <p className="text-xs text-gray-400">Get Your Money</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <EqualizerBars />
             <motion.div
-              className="w-10 h-10 rounded-full bg-gradient-to-br from-red-700 via-red-600 to-orange-500 flex items-center justify-center text-sm font-bold shadow-lg shadow-red-700/30"
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-puple-700 via-purple-600 to-yellow-300 flex items-center justify-center text-sm font-bold shadow-lg shadow-red-700/30"
               whileHover={{ scale: 1.05 }}
             >
               {profile.artistName?.[0]?.toUpperCase() || 'R'}
@@ -434,7 +434,7 @@ export default function App() {
                 <div className="glass-card rounded-2xl p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <Disc3 className="w-5 h-5 text-red-400" />
+                      <Disc3 className="w-5 h-5 text-purple-600" />
                       Recent Tracks
                     </h3>
                     <button
@@ -454,7 +454,7 @@ export default function App() {
                         transition={{ delay: i * 0.1 }}
                       >
                         <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${['from-red-700 to-red-500', 'from-rose-700 to-rose-500', 'from-red-800 to-orange-600'][i % 3]} flex items-center justify-center shadow-lg`}>
+                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${['from-purple-700 to-purple-500', 'from-blue-700 to-blue-500', 'from-red-400 to-red-800'][i % 3]} flex items-center justify-center shadow-lg`}>
                             <Play className="w-5 h-5 text-white" />
                           </div>
                           <div>
@@ -899,7 +899,7 @@ export default function App() {
         {/* Footer */}
         <footer className="mt-12 py-6 border-t border-red-700/10 text-center">
           <p className="text-sm text-gray-600 flex items-center justify-center gap-2">
-            <Crown className="w-4 h-4 text-red-700" />
+            <Crown className="w-4 h-4 text-yellow-300" />
             <span className="gradient-text font-medium">Royally Tuned</span>
             <span className="text-gray-500">— Own Your Rights</span>
           </p>
