@@ -54,7 +54,7 @@ const BrandLogo = () => (
 );
 
 // Floating Orb Component
-function FloatingOrb({ delay = 0, size = 'lg', color = 'red-300' }: { delay?: number; size?: string; color?: string; }) {
+function FloatingOrb({ delay = 0, size = 'lg', color = 'red-100' }: { delay?: number; size?: string; color?: string; }) {
   const sizeClasses: Record<string, string> = {
     sm: 'w-32 h-32',
     md: 'w-48 h-48',
@@ -90,7 +90,7 @@ const EqualizerBars = () => (
     {[0.6, 1, 0.4, 0.8, 0.5].map((height, i) => (
       <motion.div
         key={i}
-        className="w-1 bg-gradient-to-t from-red-700 via-red-600 to-orange-400 rounded-full"
+        className="w-1 bg-gradient-to-t from-red-700 via-purple-600 to-orange-400 rounded-full"
         animate={{ height: [`${height * 100}%`, '100%', `${height * 60}%`] }}
         transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.1 }}
       />
@@ -101,7 +101,7 @@ const EqualizerBars = () => (
 // Color schemes for different elements - Royally Tuned Brand (Purple/Magenta/Blue)
 const kpiColors = [
   { bg: 'from-red-600/20 to-red-600/10', icon: 'text-red-500', glow: 'shadow-red-600/20' },
-  { bg: 'from-red-700/20 to-red-800/10', icon: 'text-red-400', glow: 'shadow-red-700/20' },
+  { bg: 'from-yellow-700/20 to-yellow-800/10', icon: 'text-red-400', glow: 'shadow-yellow-700/20' },
   { bg: 'from-sky-400/20 to-sky-500/10', icon: 'text-sky-400', glow: 'shadow-sky-400/20' },
   { bg: 'from-emerald-500/20 to-emerald-600/10', icon: 'text-emerald-400', glow: 'shadow-emerald-500/20' },
 ];
