@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { hasSupabaseConfig } from '../lib/supabaseClient';
-import { Mail, LogIn } from 'lucide-react';
+import { Mail, Loader2 } from 'lucide-react';
 
 export default function Login() {
   const { signInWithEmail } = useAuth();
@@ -22,52 +23,64 @@ export default function Login() {
   };
 
   return (
-    <div className="glass-card rounded-2xl p-6 max-w-md">
-      {!hasSupabaseConfig() && (
-        <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm">
-          Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env.
-        </div>
-      )}
-      <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-        <LogIn className="w-5 h-5 text-purple-400" />
-        Sign in
-      </h3>
-      <p className="text-sm text-gray-400 mb-4">Enter your email to receive a magic link.</p>
+    <div className="min-h-screen bg-gradient-to-b from-black via-purple-950/20 to-black text-white flex flex-col">
+      <div className="flex-1 flex items-center justify-center px-4 py-16">
+        <div className="w-full max-w-md">
+          <div className="glass-card rounded-2xl p-8">
+            <h1 className="text-2xl font-bold text-center mb-2">Welcome Back</h1>
+            <p className="text-white/60 text-center mb-8">Sign in to your account</p>
 
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div>
-          <label className="block text-sm text-gray-400 mb-2">Email</label>
-          <div className="flex items-center gap-2 bg-black/50 border border-purple-700/20 rounded-xl px-3">
-            <Mail className="w-4 h-4 text-gray-500" />
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-transparent py-3 focus:outline-none"
-              placeholder="you@example.com"
-            />
+            {!hasSupabaseConfig() && (
+              <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm">
+                Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env.
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium mb-2">Email</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-colors"
+                    placeholder="you@example.com"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-yellow-500 text-black font-semibold hover:opacity-90 hover:scale-[1.02] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Send Magic Link'}
+              </button>
+            </form>
+
+            {status && (
+              <div className="mt-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm">
+                {status}
+              </div>
+            )}
+            {error && (
+              <div className="mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
+                {error}
+              </div>
+            )}
+
+            <p className="text-center text-sm text-white/60 mt-6">
+              Don't have an account?{' '}
+              <Link to="/signup" className="text-purple-400 hover:text-purple-300 cursor-pointer">
+                Sign up
+              </Link>
+            </p>
           </div>
         </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full px-4 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-60"
-        >
-          {loading ? 'Sending...' : 'Send Magic Link'}
-        </button>
-      </form>
-
-      {status && (
-        <div className="mt-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm">
-          {status}
-        </div>
-      )}
-      {error && (
-        <div className="mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
-          {error}
-        </div>
-      )}
+      </div>
     </div>
   );
 }
