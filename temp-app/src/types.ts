@@ -1,73 +1,78 @@
-// Types for the application
-export interface Profile {
-  legalName: string;
-  artistName: string;
-  ipiNumber: string;
-  pro: string;
-  email: string;
-  publisherName: string;
-  isSelfPublished: boolean;
-  distributor: string;
-}
-
-export interface Split {
+// User and subscription types
+export interface UserProfile {
   id: string;
-  name: string;
-  role: 'Writer' | 'Producer' | 'Publisher' | 'Performer' | 'Co-Writer';
-  share: number;
-  email?: string;
+  email: string;
+  artistName?: string;
+  legalName?: string;
+  ipiNumber?: string;
+  isniNumber?: string;
+  proAffiliation?: string; // BMI, ASCAP, SESAC, etc.
+  publisherName?: string;
+  createdAt: string;
+  profileColor?: string;
 }
 
 export interface Track {
   id: string;
+  userId: string;
   title: string;
-  isrc: string;
-  iswc: string;
-  upc: string;
-  releaseDate: string;
-  creationYear: number;
-  copyrightNumber: string;
-  completedSteps: string[];
+  isrc?: string;
+  iswc?: string;
+  releaseDate?: string;
+  writers: string[];
   splits: Split[];
-  artwork?: string;
-  genre?: string;
-  bpm?: number;
-  duration?: string;
+  registrationStatus: RegistrationStatus;
   streams?: number;
-  revenue?: number;
+  earnings?: number;
 }
 
-export interface RegistrationStep {
+export interface Split {
+  name: string;
+  percentage: number;
+  role: 'writer' | 'producer' | 'performer' | 'publisher';
+}
+
+export interface RegistrationStatus {
+  pro: boolean;
+  soundExchange: boolean;
+  mlc: boolean;
+  distributor: boolean;
+}
+
+export interface ChecklistItem {
   id: string;
   title: string;
-  category: string;
-  url: string;
   description: string;
-  tip: string;
-  icon: string;
-  color: string;
+  completed: boolean;
+  category: 'registration' | 'documentation' | 'distribution';
 }
 
-export interface RoyaltyEstimate {
-  master: number;
-  mechanical: number;
-  performance: number;
-  sync: number;
+export interface StreamCalculation {
+  streams: number;
+  performanceRoyalty: number;
+  mechanicalRoyalty: number;
+  neighboringRights: number;
   total: number;
 }
 
-export interface MonthlyRevenue {
-  month: string;
-  master: number;
-  mechanical: number;
-  performance: number;
-  sync: number;
-}
+// Navigation types
+export type NavItem = {
+  label: string;
+  path: string;
+  icon?: string;
+};
 
-export interface StreamStats {
-  platform: string;
-  streams: number;
-  revenue: number;
-  color: string;
-  [key: string]: string | number;
-}
+export const PUBLIC_NAV: NavItem[] = [
+  { label: 'Home', path: '/' },
+  { label: 'About', path: '/about' },
+  { label: 'Pricing', path: '/pricing' },
+];
+
+export const PAID_NAV: NavItem[] = [
+  { label: 'Dashboard', path: '/app' },
+  { label: 'Tracks', path: '/app/tracks' },
+  { label: 'Checklist', path: '/app/checklist' },
+  { label: 'Toolkit', path: '/app/toolkit' },
+  { label: 'Profile', path: '/app/profile' },
+];
+

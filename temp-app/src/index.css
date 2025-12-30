@@ -2,18 +2,21 @@
 @import "tailwindcss";
 
 :root {
-  /* Royally Tuned Brand Colors - Dark Purple & Black */
+  /* Royally Tuned Brand Colors */
   --rt-purple: #7c3aed;
   --rt-purple-light: #a78bfa;
-  --rt-blue: #7dd3fc;
-  --rt-cream: #f5f0e6;
+  --rt-purple-dark: #5b21b6;
+  --rt-yellow: #fbbf24;
+  --rt-yellow-light: #fcd34d;
+  --rt-crimson: #dc2626;
   --rt-charcoal: #1a1a1a;
-  --rt-dark: #0d0d0d;
+  --rt-dark: #0a0a0a;
+  --rt-darker: #050505;
   --rt-money: #22c55e;
 
   --gradient-royal: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
-  --gradient-blue: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 100%);
-  --gradient-dark: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 50%, #0d0d0d 100%);
+  --gradient-accent: linear-gradient(135deg, #7c3aed 0%, #fbbf24 100%);
+  --gradient-dark: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
 }
 
 * {
@@ -67,15 +70,15 @@ body {
   background-clip: text;
 }
 
-.gradient-text-blue {
-  background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 100%);
+.gradient-text-yellow {
+  background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.gradient-text-cream {
-  background: linear-gradient(135deg, #f5f0e6 0%, #e8e0d0 100%);
+.gradient-text-accent {
+  background: linear-gradient(135deg, #7c3aed 0%, #fbbf24 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -86,8 +89,8 @@ body {
   box-shadow: 0 0 30px rgba(124, 58, 237, 0.4), 0 0 60px rgba(124, 58, 237, 0.2);
 }
 
-.glow-blue {
-  box-shadow: 0 0 30px rgba(125, 211, 252, 0.3), 0 0 60px rgba(125, 211, 252, 0.1);
+.glow-yellow {
+  box-shadow: 0 0 30px rgba(251, 191, 36, 0.3), 0 0 60px rgba(251, 191, 36, 0.1);
 }
 
 .glow-green {
@@ -150,11 +153,16 @@ input[type="range"]::-webkit-slider-thumb:hover {
 /* Mesh Background */
 .mesh-bg {
   background-image:
-    radial-gradient(at 40% 20%, rgba(124, 58, 237, 0.12) 0px, transparent 50%),
-    radial-gradient(at 80% 0%, rgba(167, 139, 250, 0.08) 0px, transparent 50%),
-    radial-gradient(at 0% 50%, rgba(125, 211, 252, 0.08) 0px, transparent 50%),
-    radial-gradient(at 80% 50%, rgba(245, 240, 230, 0.04) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(34, 197, 94, 0.04) 0px, transparent 50%);
+    radial-gradient(at 40% 20%, rgba(124, 58, 237, 0.15) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, rgba(167, 139, 250, 0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, rgba(251, 191, 36, 0.08) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, rgba(220, 38, 38, 0.05) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(124, 58, 237, 0.08) 0px, transparent 50%);
+}
+
+/* Neon yellow glow */
+.neon-yellow {
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.8), 0 0 20px rgba(251, 191, 36, 0.6), 0 0 40px rgba(251, 191, 36, 0.4);
 }
 
 /* Card Hover */

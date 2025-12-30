@@ -1,39 +1,29 @@
 import { Link } from 'react-router-dom';
+import { Crown } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="w-full border-t border-purple-900/30 bg-black/50 backdrop-blur-sm mt-auto">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          {/* Logo & Brand */}
-          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <img src="/rt1.png" alt="Royally Tuned" className="w-10 h-10 object-contain" />
-            <span className="brand-script text-xl bg-gradient-to-r from-purple-400 to-yellow-400 bg-clip-text text-transparent">
-              Royally Tuned
-            </span>
+    <footer className="bg-[#050505] border-t border-white/5">
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 group">
+            <Crown className="w-6 h-6 text-royal-500 group-hover:text-gold-400 transition-colors" />
+            <span className="brand-script text-xl text-white">Royally Tuned</span>
           </Link>
 
-          {/* Navigation Links */}
-          <nav className="flex flex-wrap items-center justify-center gap-6 text-sm">
-            <Link to="/" className="text-white/60 hover:text-white transition-colors">
-              Home
-            </Link>
-            <Link to="/about" className="text-white/60 hover:text-white transition-colors">
-              About
-            </Link>
-            <Link to="/pricing" className="text-white/60 hover:text-white transition-colors">
-              Pricing
-            </Link>
-            <Link to="/privacy" className="text-white/60 hover:text-white transition-colors">
+          {/* Links */}
+          <div className="flex items-center gap-8 text-sm text-white/50">
+            <Link to="/privacy" className="hover:text-white transition-colors">
               Privacy Policy
             </Link>
-            <Link to="/terms" className="text-white/60 hover:text-white transition-colors">
+            <Link to="/terms" className="hover:text-white transition-colors">
               Terms of Service
             </Link>
-          </nav>
+          </div>
 
           {/* Copyright */}
-          <p className="text-white/40 text-sm">
+          <p className="text-sm text-white/30">
             © {new Date().getFullYear()} Royally Tuned. All rights reserved.
           </p>
         </div>

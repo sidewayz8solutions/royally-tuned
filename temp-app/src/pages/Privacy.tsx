@@ -1,50 +1,60 @@
-import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Shield } from 'lucide-react';
 
 export default function Privacy() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-purple-950/20 to-black text-white">
-      <div className="max-w-4xl mx-auto px-4 py-16">
-        <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-purple-400 to-yellow-400 bg-clip-text text-transparent">
-          Privacy Policy
-        </h1>
+    <div className="py-24 px-6">
+      <div className="max-w-3xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="flex items-center gap-3 mb-8">
+            <Shield className="w-8 h-8 text-royal-500" />
+            <h1 className="text-4xl font-bold text-white">Privacy Policy</h1>
+          </div>
 
-        <div className="prose prose-invert prose-purple max-w-none space-y-6 text-white/80">
-          <p className="text-lg">Last updated: December 2024</p>
+          <div className="prose prose-invert max-w-none">
+            <div className="glass-card rounded-2xl p-8 space-y-8">
+              <section>
+                <h2 className="text-xl font-semibold text-white mb-4">Information We Collect</h2>
+                <p className="text-white/60">
+                  We collect information you provide directly, including your email address, artist name, 
+                  and royalty registration details. This information is used solely to provide our services.
+                </p>
+              </section>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-white">Information We Collect</h2>
-            <p>We collect information you provide directly to us, such as when you create an account, upload royalty statements, or contact us for support. This may include your name, email address, and music-related financial data.</p>
-          </section>
+              <section>
+                <h2 className="text-xl font-semibold text-white mb-4">How We Use Your Data</h2>
+                <p className="text-white/60">
+                  Your data is used to auto-fill royalty registration forms, track your earnings, 
+                  and provide personalized recommendations. We never sell your personal information.
+                </p>
+              </section>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-white">How We Use Your Information</h2>
-            <p>We use the information we collect to provide, maintain, and improve our services, process your royalty data, and communicate with you about your account and our services.</p>
-          </section>
+              <section>
+                <h2 className="text-xl font-semibold text-white mb-4">Data Security</h2>
+                <p className="text-white/60">
+                  We use industry-standard encryption and security practices to protect your data. 
+                  Your information is stored securely and accessed only when necessary to provide services.
+                </p>
+              </section>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-white">Data Security</h2>
-            <p>We implement appropriate security measures to protect your personal information. Your royalty data is encrypted and stored securely. We never share your financial data with third parties without your explicit consent.</p>
-          </section>
+              <section>
+                <h2 className="text-xl font-semibold text-white mb-4">Your Rights</h2>
+                <p className="text-white/60">
+                  You can request access to, correction of, or deletion of your personal data at any time. 
+                  Contact us at privacy@royallytuned.com for any privacy-related requests.
+                </p>
+              </section>
 
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-white">Your Rights</h2>
-            <p>You have the right to access, correct, or delete your personal information at any time. You can export your data or request account deletion through your dashboard or by contacting support.</p>
-          </section>
-
-          <section className="space-y-4">
-            <h2 className="text-2xl font-semibold text-white">Contact Us</h2>
-            <p>If you have any questions about this Privacy Policy, please contact us at support@royallytuned.com</p>
-          </section>
-        </div>
-
-        <div className="mt-12">
-          <Link 
-            to="/" 
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-yellow-500 text-black font-semibold hover:opacity-90 transition-opacity cursor-pointer"
-          >
-            ← Back to Home
-          </Link>
-        </div>
+              <p className="text-sm text-white/40 pt-4 border-t border-white/10">
+                Last updated: {new Date().toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

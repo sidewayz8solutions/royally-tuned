@@ -1,77 +1,149 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Check, Sparkles } from 'lucide-react';
-import { FadeInOnScroll, StaggerContainer, StaggerItem, TiltCard } from '../components/animations';
+import { Crown, CheckCircle, ArrowRight, Zap, Shield, BarChart3 } from 'lucide-react';
+import { FadeInOnScroll, TiltCard, StaggerContainer, StaggerItem } from '../components/animations';
 
-export default function Pricing({ onSelect }: { onSelect?: () => void }) {
-  const tiers = [
-    { name: 'Free', price: '$0', period: '', desc: 'Explore the platform', features: ['View sample dashboard', 'Learn about royalties', 'Basic calculator'], popular: false },
-    { name: 'Pro', price: '$35', period: '/month', desc: 'Everything you need', features: ['AI Statement Parser', 'Unlimited Track Management', 'Complete Registration Hub', 'Streaming Calculator', 'Split Sheet Generator', 'PRO & MLC Guides', 'SoundExchange Setup', 'Priority Support'], popular: true },
-  ];
-
+export default function Pricing() {
   return (
-    <div className="min-h-screen text-white py-24 px-4">
-      <div className="max-w-5xl mx-auto">
-        <FadeInOnScroll className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Simple, Transparent Pricing</h1>
-          <p className="text-xl text-white/60">One plan. Everything included. No hidden fees.</p>
-        </FadeInOnScroll>
+    <div className="overflow-hidden">
+      {/* Hero */}
+      <section className="py-24 px-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
+              Simple, Transparent
+              <span className="block gradient-text-yellow">Pricing</span>
+            </h1>
+            <p className="text-xl text-white/60 max-w-2xl mx-auto">
+              One plan. All features. No surprises.
+            </p>
+          </motion.div>
+        </div>
+      </section>
 
-        {/* Pricing Cards */}
-        <StaggerContainer className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-20">
-          {tiers.map((t) => (
-            <StaggerItem key={t.name}>
-              <TiltCard className="h-full">
-                <div className={`glass-card rounded-3xl p-8 h-full border ${t.popular ? 'border-purple-500' : 'border-white/10'} relative overflow-hidden`}>
-                  {t.popular && (
-                    <>
-                    <motion.div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-pink-600/10" animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 3, repeat: Infinity }} />
-                    <motion.span className="absolute -top-1 right-4 bg-gradient-to-r from-purple-600 to-pink-600 text-xs font-bold px-4 py-1.5 rounded-full" animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 2, repeat: Infinity }}>POPULAR</motion.span>
-                    </>
-                  )}
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Sparkles className={`w-5 h-5 ${t.popular ? 'text-purple-400' : 'text-white/40'}`} />
-                      <h3 className="text-xl font-bold">{t.name}</h3>
-                    </div>
-                    <div className="flex items-baseline gap-1 mb-2">
-                      <span className="text-4xl font-bold">{t.price}</span>
-                      {t.period && <span className="text-white/50">{t.period}</span>}
-                    </div>
-                    <p className="text-white/50 mb-6">{t.desc}</p>
-                    <ul className="space-y-3 mb-8">
-                      {t.features.map((f, i) => (
-                        <li key={i} className="flex items-center gap-3"><Check className={`w-5 h-5 shrink-0 ${t.popular ? 'text-emerald-400' : 'text-white/40'}`} /><span className="text-white/80">{f}</span></li>
-                      ))}
-                    </ul>
-                    <Link to="/signup" onClick={onSelect} className={`block text-center w-full px-6 py-4 rounded-2xl font-semibold transition-all duration-300 ${t.popular ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 shadow-lg shadow-purple-500/30' : 'bg-white/10 hover:bg-white/20'}`}>
-                      {t.popular ? 'Start Pro' : 'Get Started'}
-                    </Link>
+      {/* Pricing Card */}
+      <section className="py-12 px-6">
+        <div className="max-w-lg mx-auto">
+          <FadeInOnScroll>
+            <TiltCard>
+              <div className="glass-card rounded-3xl p-10 relative overflow-hidden">
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-br from-royal-600/10 via-transparent to-gold-500/10"
+                  animate={{ opacity: [0.5, 0.8, 0.5] }}
+                  transition={{ duration: 5, repeat: Infinity }}
+                />
+                
+                <div className="relative z-10">
+                  <div className="flex items-center justify-center gap-2 mb-6">
+                    <Crown className="w-8 h-8 text-gold-400" />
+                    <span className="text-xl font-semibold text-white">Full Access</span>
                   </div>
-                </div>
-              </TiltCard>
-            </StaggerItem>
-          ))}
-        </StaggerContainer>
 
-        {/* FAQ */}
-        <FadeInOnScroll>
-          <h2 className="text-2xl font-bold text-center mb-8">Frequently Asked Questions</h2>
-          <StaggerContainer className="grid md:grid-cols-2 gap-6">
+                  <div className="text-center mb-8">
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className="text-6xl font-bold gradient-text-yellow">$35</span>
+                      <span className="text-xl text-white/50">/month</span>
+                    </div>
+                    <p className="text-white/50 mt-2">Cancel anytime. No contracts.</p>
+                  </div>
+
+                  <div className="space-y-4 mb-8">
+                    {[
+                      'Unlimited track management',
+                      'Dashboard with real-time analytics',
+                      'Stream & royalty calculator',
+                      'One-time data entry system',
+                      'Form parsing from photos',
+                      'Registration checklist & tracker',
+                      'All pre-filled forms',
+                      'Profile customization',
+                      'Priority support',
+                    ].map((feature, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                        <span className="text-white/80">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <Link
+                    to="/signup"
+                    className="w-full btn-primary text-lg py-4 flex items-center justify-center gap-2"
+                  >
+                    Get Started
+                    <ArrowRight className="w-5 h-5" />
+                  </Link>
+                </div>
+              </div>
+            </TiltCard>
+          </FadeInOnScroll>
+        </div>
+      </section>
+
+      {/* ROI Section */}
+      <section className="py-24 px-6">
+        <div className="max-w-5xl mx-auto">
+          <FadeInOnScroll>
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                The <span className="text-green-400">ROI</span> Is Clear
+              </h2>
+              <p className="text-xl text-white/50">
+                $35/month vs. thousands in lost royalties
+              </p>
+            </div>
+          </FadeInOnScroll>
+
+          <StaggerContainer className="grid md:grid-cols-3 gap-8">
             {[
-              { q: 'Can I cancel anytime?', a: 'Yes! No contracts, no commitments. Cancel your subscription anytime from your dashboard.' },
-              { q: 'What payment methods do you accept?', a: 'We accept all major credit cards through our secure payment processor, Stripe.' },
-              { q: 'Is there a free trial?', a: 'You can explore basic features for free. Pro features unlock immediately after subscription.' },
-              { q: 'Do you take a cut of my royalties?', a: 'Never. You keep 100% of your royalties. We only charge a flat monthly fee.' },
-            ].map((faq, i) => (
-              <StaggerItem key={i}><div className="glass-card rounded-xl p-6 border border-white/10">
-                <h3 className="font-semibold mb-2">{faq.q}</h3>
-                <p className="text-white/60 text-sm">{faq.a}</p>
-              </div></StaggerItem>
+              { icon: Zap, stat: '$1,000+', label: 'Average unclaimed royalties per artist annually' },
+              { icon: Shield, stat: '6+', label: 'Organizations you need to register with' },
+              { icon: BarChart3, stat: '28x', label: 'Return on your $35/month investment' },
+            ].map((item, i) => (
+              <StaggerItem key={i}>
+                <div className="glass-card rounded-2xl p-8 text-center">
+                  <div className="w-14 h-14 rounded-xl bg-royal-600/20 flex items-center justify-center mx-auto mb-4">
+                    <item.icon className="w-7 h-7 text-royal-400" />
+                  </div>
+                  <div className="text-3xl font-bold text-gold-400 mb-2">{item.stat}</div>
+                  <p className="text-sm text-white/50">{item.label}</p>
+                </div>
+              </StaggerItem>
             ))}
           </StaggerContainer>
-        </FadeInOnScroll>
-      </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-24 px-6 bg-gradient-to-b from-transparent via-royal-950/10 to-transparent">
+        <div className="max-w-3xl mx-auto">
+          <FadeInOnScroll>
+            <h2 className="text-3xl font-bold text-white text-center mb-12">
+              Frequently Asked Questions
+            </h2>
+          </FadeInOnScroll>
+
+          <div className="space-y-4">
+            {[
+              { q: 'Can I cancel anytime?', a: 'Yes. Cancel with one click from your profile. No questions asked.' },
+              { q: 'Is there a free trial?', a: 'We don\'t offer a free trial, but you can cancel within the first 7 days for a full refund.' },
+              { q: 'What payment methods do you accept?', a: 'All major credit cards through our secure Stripe integration.' },
+              { q: 'Do you take a cut of my royalties?', a: 'Absolutely not. You keep 100% of your royalties. We just help you find and claim them.' },
+            ].map((item, i) => (
+              <FadeInOnScroll key={i} delay={i * 0.1}>
+                <div className="glass-card rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-white mb-2">{item.q}</h3>
+                  <p className="text-white/60">{item.a}</p>
+                </div>
+              </FadeInOnScroll>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
