@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { User, Mail, Music, Building, Save, Upload, CheckCircle, Crown } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { User, Mail, Music, Building, Save, Upload, CheckCircle, Crown, Camera, ImagePlus, X, Palette } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { FadeInOnScroll } from '../components/animations';
+import { motion } from 'framer-motion';
 
 const colorOptions = [
   { name: 'Royal Purple', value: '#7c3aed', class: 'bg-royal-600' },
@@ -9,12 +10,30 @@ const colorOptions = [
   { name: 'Crimson', value: '#dc2626', class: 'bg-crimson-500' },
   { name: 'Emerald', value: '#10b981', class: 'bg-emerald-500' },
   { name: 'Ocean', value: '#0ea5e9', class: 'bg-sky-500' },
+  { name: 'Pink', value: '#ec4899', class: 'bg-pink-500' },
+  { name: 'Orange', value: '#f97316', class: 'bg-orange-500' },
+];
+
+const backgroundOptions = [
+  { name: 'Dark', value: 'bg-[#0a0a0a]', preview: '#0a0a0a' },
+  { name: 'Gradient Purple', value: 'bg-gradient-to-br from-royal-950 to-[#0a0a0a]', preview: 'linear-gradient(to bottom right, #2e1065, #0a0a0a)' },
+  { name: 'Gradient Gold', value: 'bg-gradient-to-br from-amber-950 to-[#0a0a0a]', preview: 'linear-gradient(to bottom right, #451a03, #0a0a0a)' },
+  { name: 'Gradient Blue', value: 'bg-gradient-to-br from-blue-950 to-[#0a0a0a]', preview: 'linear-gradient(to bottom right, #172554, #0a0a0a)' },
+  { name: 'Mesh', value: 'mesh-bg bg-[#0a0a0a]', preview: '#1a1a1a' },
 ];
 
 export default function Profile() {
   const { user, signOut } = useAuth();
   const [saved, setSaved] = useState(false);
   const [profileColor, setProfileColor] = useState('#7c3aed');
+  const [bgOption, setBgOption] = useState(backgroundOptions[0]);
+  const [bannerImage, setBannerImage] = useState<string | null>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+  const profileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+
   const [formData, setFormData] = useState({
     artistName: '',
     legalName: '',
@@ -22,7 +41,29 @@ export default function Profile() {
     ipiNumber: '',
     proAffiliation: '',
     publisherName: '',
+    bio: '',
+    website: '',
+    instagram: '',
+    spotify: '',
   });
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'banner' | 'profile' | 'gallery') => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        if (type === 'banner') setBannerImage(result);
+        else if (type === 'profile') setProfileImage(result);
+        else if (type === 'gallery') setGalleryImages([...galleryImages, result]);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeGalleryImage = (index: number) => {
+    setGalleryImages(galleryImages.filter((_, i) => i !== index));
+  };
 
   const handleSave = () => {
     setSaved(true);
@@ -30,22 +71,83 @@ export default function Profile() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-6">
-      <FadeInOnScroll>
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Profile</h1>
-          <p className="text-white/50">Manage your account and preferences</p>
-        </div>
-      </FadeInOnScroll>
+    <div className={`min-h-screen -mt-24 pt-24 ${bgOption.value}`}>
+      <div className="max-w-5xl mx-auto px-6">
+        {/* Banner & Profile Picture Section */}
+        <FadeInOnScroll>
+          <div className="relative mb-24">
+            {/* Banner */}
+            <div
+              className="h-48 md:h-64 rounded-2xl overflow-hidden relative group cursor-pointer"
+              onClick={() => bannerInputRef.current?.click()}
+              style={{ background: bannerImage ? `url(${bannerImage}) center/cover` : `linear-gradient(135deg, ${profileColor}40, ${profileColor}10)` }}
+            >
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <Camera className="w-8 h-8 text-white" />
+              </div>
+              <input ref={bannerInputRef} type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'banner')} />
+            </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Main Form */}
-        <FadeInOnScroll delay={0.1} className="lg:col-span-2">
-          <div className="glass-card rounded-2xl p-8">
-            <h2 className="text-xl font-semibold text-white mb-6">Artist Information</h2>
-            <p className="text-sm text-white/50 mb-6">
-              This information is used to auto-fill royalty registration forms.
-            </p>
+            {/* Profile Picture */}
+            <div className="absolute -bottom-16 left-8">
+              <div
+                className="w-32 h-32 rounded-2xl border-4 border-[#0a0a0a] overflow-hidden relative group cursor-pointer"
+                onClick={() => profileInputRef.current?.click()}
+                style={{
+                  background: profileImage ? `url(${profileImage}) center/cover` : profileColor,
+                }}
+              >
+                {!profileImage && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <User className="w-12 h-12 text-white/60" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Camera className="w-6 h-6 text-white" />
+                </div>
+                <input ref={profileInputRef} type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'profile')} />
+              </div>
+            </div>
+
+            {/* Artist Name Display */}
+            <div className="absolute -bottom-16 left-44">
+              <h1 className="text-2xl font-bold text-white">{formData.artistName || 'Your Artist Name'}</h1>
+              <p className="text-white/50 text-sm">{formData.bio ? formData.bio.slice(0, 60) + '...' : 'Add a bio below'}</p>
+            </div>
+          </div>
+        </FadeInOnScroll>
+
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Main Form */}
+          <FadeInOnScroll delay={0.1} className="lg:col-span-2 space-y-8">
+            {/* Photo Gallery */}
+            <div className="glass-card rounded-2xl p-6">
+              <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <ImagePlus className="w-5 h-5" /> Photo Gallery
+              </h2>
+              <div className="grid grid-cols-3 gap-3">
+                {galleryImages.map((img, i) => (
+                  <motion.div key={i} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="relative aspect-square rounded-xl overflow-hidden group">
+                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <button onClick={() => removeGalleryImage(i)} className="absolute top-2 right-2 w-6 h-6 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <X className="w-4 h-4 text-white" />
+                    </button>
+                  </motion.div>
+                ))}
+                {galleryImages.length < 6 && (
+                  <div onClick={() => galleryInputRef.current?.click()} className="aspect-square rounded-xl border-2 border-dashed border-white/20 flex items-center justify-center cursor-pointer hover:border-royal-500/50 transition-colors">
+                    <ImagePlus className="w-8 h-8 text-white/30" />
+                    <input ref={galleryInputRef} type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'gallery')} />
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-white/40 mt-3">Add up to 6 photos to showcase your music journey</p>
+            </div>
+
+            {/* Artist Info Form */}
+            <div className="glass-card rounded-2xl p-8">
+              <h2 className="text-xl font-semibold text-white mb-6">Artist Information</h2>
+              <p className="text-sm text-white/50 mb-6">This information is used to auto-fill royalty registration forms.</p>
 
             <div className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
@@ -134,6 +236,17 @@ export default function Profile() {
               </div>
 
               <div>
+                <label className="block text-sm text-white/70 mb-2">Bio</label>
+                <textarea
+                  value={formData.bio}
+                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                  placeholder="Tell fans about yourself, your music, and your journey..."
+                  rows={4}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white placeholder-white/30 focus:outline-none focus:border-royal-500 resize-none"
+                />
+              </div>
+
+              <div>
                 <label className="block text-sm text-white/70 mb-3">Profile Accent Color</label>
                 <div className="flex gap-3">
                   {colorOptions.map((color) => (
@@ -144,6 +257,22 @@ export default function Profile() {
                     >
                       {profileColor === color.value && <CheckCircle className="w-5 h-5 text-white" />}
                     </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="flex text-sm text-white/70 mb-3 items-center gap-2">
+                  <Palette className="w-4 h-4" /> Page Background
+                </label>
+                <div className="flex gap-3 flex-wrap">
+                  {backgroundOptions.map((bg) => (
+                    <button
+                      key={bg.name}
+                      onClick={() => setBgOption(bg)}
+                      className={`w-12 h-12 rounded-xl transition-transform hover:scale-110 ${bgOption.name === bg.name ? 'ring-2 ring-white ring-offset-2 ring-offset-[#0a0a0a]' : ''}`}
+                      style={{ background: bg.preview }}
+                    />
                   ))}
                 </div>
               </div>
