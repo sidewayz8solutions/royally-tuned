@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Crown, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { PUBLIC_NAV, PAID_NAV } from '../types';
@@ -15,12 +15,11 @@ export function PublicNav() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50">
       <div className="glass border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 group">
-              <Crown className="w-8 h-8 text-royal-500 group-hover:text-gold-400 transition-colors" />
-              <span className="brand-script text-2xl text-white neon-purple">Royally Tuned</span>
+            <Link to="/" className="flex items-center gap-3 group">
+              <img src="/logo2.png" alt="Royally Tuned" className="h-12 w-auto" />
             </Link>
 
             {/* Desktop Nav */}
@@ -105,11 +104,10 @@ export function AppNav() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5">
-      <div className="max-w-7xl mx-auto px-6 py-4">
+      <div className="max-w-7xl mx-auto px-6 py-3">
         <div className="flex items-center justify-between">
-          <Link to="/app" className="flex items-center gap-2 group">
-            <Crown className="w-8 h-8 text-royal-500 group-hover:text-gold-400 transition-colors" />
-            <span className="brand-script text-2xl text-white neon-purple">Royally Tuned</span>
+          <Link to="/app" className="flex items-center gap-3 group">
+            <img src="/logo2.png" alt="Royally Tuned" className="h-12 w-auto" />
           </Link>
 
           <div className="flex items-center gap-6">

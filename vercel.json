@@ -1,16 +1,10 @@
 {
   "version": 2,
-  "builds": [
-    { "src": "temp-app/package.json", "use": "@vercel/static-build", "config": { "distDir": "dist" } },
-    { "src": "temp-app/api/**/*.ts", "use": "@vercel/node" }
-  ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "temp-app/api/$1" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
-  ],
-  "functions": {
-    "temp-app/api/**.ts": { "runtime": "nodejs20.x" }
-  }
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
 

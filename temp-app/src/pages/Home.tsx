@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  Crown, ArrowRight, DollarSign, FileText, BarChart3, 
+import {
+  Crown, ArrowRight, DollarSign, FileText, BarChart3,
   CheckCircle, Music, Shield, Zap, TrendingUp, Users, Lock
 } from 'lucide-react';
 import { FadeInOnScroll, StaggerContainer, StaggerItem, Parallax, Float, TiltCard } from '../components/animations';
@@ -26,17 +26,21 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 max-w-5xl mx-auto text-center">
-          <Float>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-royal-600/20 border border-royal-500/30 mb-8"
-            >
-              <Crown className="w-4 h-4 text-gold-400" />
-              <span className="text-sm text-white/80">For Independent Musicians</span>
-            </motion.div>
-          </Float>
+          {/* Hero Logo */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="mb-8"
+          >
+            <Float y={8}>
+              <img
+                src="/logo2.png"
+                alt="Royally Tuned"
+                className="h-32 md:h-44 w-auto mx-auto drop-shadow-[0_0_40px_rgba(124,58,237,0.5)]"
+              />
+            </Float>
+          </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
