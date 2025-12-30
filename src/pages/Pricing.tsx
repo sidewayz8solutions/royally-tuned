@@ -1,9 +1,54 @@
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Crown, CheckCircle, ArrowRight, Zap, Shield, BarChart3 } from 'lucide-react';
 import { FadeInOnScroll, TiltCard, StaggerContainer, StaggerItem } from '../components/animations';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Pricing() {
+  const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const startCheckout = async () => {
+    // If somehow we don't have a user yet, send them to signup first
+    if (!user) {
+      window.location.href = '/signup';
+      return;
+    }
+
+    try {
+      setError('');
+      setLoading(true);
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id }),
+      });
+
+      const data = await res.json();
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        setError(data?.error || 'Unable to start checkout. Please try again.');
+      }
+    } catch {
+      setError('Unable to start checkout. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // If we arrive from email confirmation with checkout=start, immediately kick off Stripe Checkout
+  useEffect(() => {
+    if (searchParams.get('checkout') === 'start' && user) {
+      startCheckout();
+    }
+    // We intentionally only react to changes in the query param and user
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, user]);
+
   return (
     <div className="overflow-hidden">
       {/* Hero */}
@@ -37,7 +82,7 @@ export default function Pricing() {
                   transition={{ duration: 5, repeat: Infinity }}
                 />
                 
-                <div className="relative z-10">
+                  <div className="relative z-10">
                   <div className="flex items-center justify-center gap-2 mb-6">
                     <Crown className="w-8 h-8 text-gold-400" />
                     <span className="text-xl font-semibold text-white">Full Access</span>
@@ -70,13 +115,21 @@ export default function Pricing() {
                     ))}
                   </div>
 
-                  <Link
-                    to="/signup"
-                    className="w-full btn-primary text-lg py-4 flex items-center justify-center gap-2"
+                  <button
+                    type="button"
+                    onClick={startCheckout}
+                    className="w-full btn-primary text-lg py-4 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                    disabled={loading}
                   >
-                    Get Started
+                    {loading ? 'Redirecting to checkout...' : 'Get Started'}
                     <ArrowRight className="w-5 h-5" />
-                  </Link>
+                  </button>
+
+                  {error && (
+                    <p className="mt-3 text-sm text-red-400 text-center">
+                      {error}
+                    </p>
+                  )}
                 </div>
               </div>
             </TiltCard>
