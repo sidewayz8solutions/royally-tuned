@@ -1,14 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, Circle, ChevronDown, ExternalLink, AlertCircle } from 'lucide-react';
+import { CheckCircle, Circle, ChevronDown, ExternalLink, AlertCircle, Loader2 } from 'lucide-react';
 import { FadeInOnScroll, StaggerContainer, StaggerItem } from '../components/animations';
+import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ChecklistItem {
   id: string;
   title: string;
-  description: string;
-  link?: string;
+  description: string | null;
+  external_link: string | null;
   completed: boolean;
+  category: string;
+  sort_order: number;
 }
 
 interface ChecklistCategory {
@@ -18,61 +22,115 @@ interface ChecklistCategory {
   items: ChecklistItem[];
 }
 
-const mockChecklist: ChecklistCategory[] = [
-  {
-    id: 'pro',
-    title: 'Performance Rights (PRO)',
-    description: 'Register with a PRO to collect performance royalties',
-    items: [
-      { id: '1', title: 'Join a PRO (BMI, ASCAP, or SESAC)', description: 'Register as a songwriter to collect performance royalties', completed: true },
-      { id: '2', title: 'Register all songs with your PRO', description: 'Submit song metadata and ownership information', completed: true },
-      { id: '3', title: 'Set up direct deposit', description: 'Ensure payments go directly to your bank', completed: false },
-    ],
-  },
-  {
-    id: 'mechanical',
-    title: 'Mechanical Royalties (MLC)',
-    description: 'Collect mechanical royalties from streaming services',
-    items: [
-      { id: '4', title: 'Register with The MLC', description: 'The Mechanical Licensing Collective handles US mechanical royalties', link: 'https://themlc.com', completed: true },
-      { id: '5', title: 'Claim your songs', description: 'Match your songs in the MLC database', completed: false },
-    ],
-  },
-  {
-    id: 'neighboring',
-    title: 'Neighboring Rights (SoundExchange)',
-    description: 'Collect royalties for digital radio and streaming as a performer',
-    items: [
-      { id: '6', title: 'Register with SoundExchange', description: 'Required for US digital radio royalties', link: 'https://soundexchange.com', completed: false },
-      { id: '7', title: 'Register your recordings', description: 'Submit ISRCs and recording information', completed: false },
-    ],
-  },
-  {
-    id: 'distribution',
-    title: 'Distribution',
-    description: 'Get your music on streaming platforms',
-    items: [
-      { id: '8', title: 'Choose a distributor', description: 'Select from DistroKid, TuneCore, CD Baby, etc.', completed: true },
-      { id: '9', title: 'Upload your catalog', description: 'Distribute all your music to streaming platforms', completed: true },
-    ],
-  },
+// Default checklist template for new users
+const defaultCategories: Omit<ChecklistCategory, 'items'>[] = [
+  { id: 'registration', title: 'Performance Rights (PRO)', description: 'Register with a PRO to collect performance royalties' },
+  { id: 'setup', title: 'Mechanical Royalties (MLC)', description: 'Collect mechanical royalties from streaming services' },
+  { id: 'verification', title: 'Neighboring Rights (SoundExchange)', description: 'Collect royalties for digital radio and streaming as a performer' },
+  { id: 'distribution', title: 'Distribution', description: 'Get your music on streaming platforms' },
+];
+
+const defaultItems: Omit<ChecklistItem, 'id'>[] = [
+  { title: 'Join a PRO (BMI, ASCAP, or SESAC)', description: 'Register as a songwriter to collect performance royalties', category: 'registration', completed: false, external_link: null, sort_order: 1 },
+  { title: 'Register all songs with your PRO', description: 'Submit song metadata and ownership information', category: 'registration', completed: false, external_link: null, sort_order: 2 },
+  { title: 'Set up direct deposit with PRO', description: 'Ensure payments go directly to your bank', category: 'registration', completed: false, external_link: null, sort_order: 3 },
+  { title: 'Register with The MLC', description: 'The Mechanical Licensing Collective handles US mechanical royalties', category: 'setup', completed: false, external_link: 'https://themlc.com', sort_order: 1 },
+  { title: 'Claim your songs in MLC database', description: 'Match your songs to collect mechanical royalties', category: 'setup', completed: false, external_link: null, sort_order: 2 },
+  { title: 'Register with SoundExchange', description: 'Required for US digital radio royalties', category: 'verification', completed: false, external_link: 'https://soundexchange.com', sort_order: 1 },
+  { title: 'Register your recordings with SoundExchange', description: 'Submit ISRCs and recording information', category: 'verification', completed: false, external_link: null, sort_order: 2 },
+  { title: 'Choose a distributor', description: 'Select from DistroKid, TuneCore, CD Baby, etc.', category: 'distribution', completed: false, external_link: null, sort_order: 1 },
+  { title: 'Upload your catalog', description: 'Distribute all your music to streaming platforms', category: 'distribution', completed: false, external_link: null, sort_order: 2 },
 ];
 
 export default function Checklist() {
-  const [expandedCategory, setExpandedCategory] = useState<string | null>('pro');
-  const [items, setItems] = useState(mockChecklist);
+  const { user } = useAuth();
+  const [expandedCategory, setExpandedCategory] = useState<string | null>('registration');
+  const [items, setItems] = useState<ChecklistItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const toggleItem = (categoryId: string, itemId: string) => {
-    setItems(prev => prev.map(cat =>
-      cat.id === categoryId
-        ? { ...cat, items: cat.items.map(item => item.id === itemId ? { ...item, completed: !item.completed } : item) }
-        : cat
+  // Fetch checklist items from Supabase
+  useEffect(() => {
+    if (!user || !supabase) return;
+
+    const fetchChecklist = async () => {
+      setLoading(true);
+      
+      if (!supabase) {
+        setLoading(false);
+        return;
+      }
+      
+      const { data, error } = await supabase
+        .from('checklist_items')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('sort_order', { ascending: true });
+
+      if (!error && data && data.length > 0) {
+        setItems(data);
+      } else if (!error && (!data || data.length === 0)) {
+        // Create default checklist for new user
+        const newItems = defaultItems.map(item => ({
+          ...item,
+          user_id: user.id,
+        }));
+        
+        const { data: inserted } = await supabase
+          .from('checklist_items')
+          .insert(newItems)
+          .select();
+        
+        if (inserted) {
+          setItems(inserted);
+        }
+      }
+      setLoading(false);
+    };
+
+    fetchChecklist();
+  }, [user]);
+
+  // Toggle item completion
+  const toggleItem = async (itemId: string) => {
+    if (!supabase) return;
+    
+    const item = items.find(i => i.id === itemId);
+    if (!item) return;
+
+    const newCompleted = !item.completed;
+    
+    // Optimistic update
+    setItems(prev => prev.map(i => 
+      i.id === itemId ? { ...i, completed: newCompleted, completed_at: newCompleted ? new Date().toISOString() : null } : i
     ));
+
+    // Update in database
+    await supabase
+      .from('checklist_items')
+      .update({ 
+        completed: newCompleted, 
+        completed_at: newCompleted ? new Date().toISOString() : null 
+      })
+      .eq('id', itemId);
   };
 
-  const totalItems = items.reduce((acc, cat) => acc + cat.items.length, 0);
-  const completedItems = items.reduce((acc, cat) => acc + cat.items.filter(i => i.completed).length, 0);
-  const progressPercent = Math.round((completedItems / totalItems) * 100);
+  // Group items by category
+  const categories: ChecklistCategory[] = defaultCategories.map(cat => ({
+    ...cat,
+    items: items.filter(item => item.category === cat.id),
+  }));
+
+  const totalItems = items.length;
+  const completedItems = items.filter(i => i.completed).length;
+  const progressPercent = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto px-6 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-royal-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-6">
@@ -104,7 +162,7 @@ export default function Checklist() {
 
       {/* Checklist Categories */}
       <StaggerContainer className="space-y-4">
-        {items.map((category) => {
+        {categories.map((category) => {
           const catCompleted = category.items.filter(i => i.completed).length;
           const isExpanded = expandedCategory === category.id;
 
@@ -116,12 +174,12 @@ export default function Checklist() {
                   className="w-full p-6 flex items-center gap-4 text-left hover:bg-white/5 transition-colors"
                 >
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    catCompleted === category.items.length ? 'bg-green-500/20' : 'bg-royal-600/20'
+                    catCompleted === category.items.length && category.items.length > 0 ? 'bg-green-500/20' : 'bg-royal-600/20'
                   }`}>
-                    {catCompleted === category.items.length ? (
-                      <CheckCircle className="w-5 h-5 text-red-500" />
+                    {catCompleted === category.items.length && category.items.length > 0 ? (
+                      <CheckCircle className="w-5 h-5 text-green-500" />
                     ) : (
-                      <AlertCircle className="w-5 h-5 text-red-500" />
+                      <AlertCircle className="w-5 h-5 text-royal-500" />
                     )}
                   </div>
                   <div className="flex-1">
@@ -142,10 +200,10 @@ export default function Checklist() {
                         <div
                           key={item.id}
                           className="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer"
-                          onClick={() => toggleItem(category.id, item.id)}
+                          onClick={() => toggleItem(item.id)}
                         >
                           {item.completed ? (
-                            <CheckCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                            <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
                           ) : (
                             <Circle className="w-5 h-5 text-white/30 mt-0.5 flex-shrink-0" />
                           )}
@@ -153,8 +211,8 @@ export default function Checklist() {
                             <p className={`font-medium ${item.completed ? 'text-white/50 line-through' : 'text-white'}`}>{item.title}</p>
                             <p className="text-sm text-white/40">{item.description}</p>
                           </div>
-                          {item.link && (
-                            <a href={item.link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-royal-400 hover:text-royal-300">
+                          {item.external_link && (
+                            <a href={item.external_link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-royal-400 hover:text-royal-300">
                               <ExternalLink className="w-4 h-4" />
                             </a>
                           )}

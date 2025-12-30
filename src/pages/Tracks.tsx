@@ -1,23 +1,97 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Music, Plus, MoreVertical, Play, DollarSign, CheckCircle, AlertCircle, Search } from 'lucide-react';
+import { Music, Plus, MoreVertical, Play, DollarSign, CheckCircle, AlertCircle, Search, Loader2 } from 'lucide-react';
 import { FadeInOnScroll, StaggerContainer, StaggerItem } from '../components/animations';
+import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../contexts/AuthContext';
 
-const mockTracks = [
-  { id: 1, title: 'Midnight Dreams', streams: 45200, earnings: 127.50, status: 'complete', isrc: 'USRC12345678' },
-  { id: 2, title: 'Summer Vibes', streams: 102300, earnings: 287.40, status: 'complete', isrc: 'USRC12345679' },
-  { id: 3, title: 'Electric Soul', streams: 8900, earnings: 24.80, status: 'pending', isrc: 'USRC12345680' },
-  { id: 4, title: 'Neon Nights', streams: 31500, earnings: 88.20, status: 'complete', isrc: 'USRC12345681' },
-  { id: 5, title: 'Golden Hour', streams: 67800, earnings: 189.90, status: 'complete', isrc: 'USRC12345682' },
-];
+interface Track {
+  id: string;
+  title: string;
+  isrc: string | null;
+  total_streams: number;
+  total_earnings: number;
+  registration_status: {
+    pro?: string;
+    sound_exchange?: string;
+    mlc?: string;
+    distributor?: string;
+  };
+}
 
 export default function Tracks() {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [newTrack, setNewTrack] = useState({ title: '', isrc: '' });
 
-  const filteredTracks = mockTracks.filter(track =>
+  // Fetch tracks from Supabase
+  useEffect(() => {
+    if (!user || !supabase) return;
+    
+    const fetchTracks = async () => {
+      if (!supabase) return; // Add null check here
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('tracks')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+      
+      if (!error && data) {
+        setTracks(data);
+      }
+      setLoading(false);
+    };
+
+    fetchTracks();
+  }, [user]);
+
+  const filteredTracks = tracks.filter(track =>
     track.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Check if all registrations are complete
+  const isComplete = (status: Track['registration_status']) => {
+    if (!status) return false;
+    return Object.values(status).every(v => v === 'verified' || v === 'submitted');
+  };
+
+  // Handle add track
+  const handleAddTrack = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !supabase || !newTrack.title.trim()) return;
+
+    setSaving(true);
+    const { data, error } = await supabase
+      .from('tracks')
+      .insert({
+        user_id: user.id,
+        title: newTrack.title.trim(),
+        isrc: newTrack.isrc.trim() || null,
+      })
+      .select()
+      .single();
+
+    if (!error && data) {
+      setTracks(prev => [data, ...prev]);
+      setNewTrack({ title: '', isrc: '' });
+      setShowAddModal(false);
+    }
+    setSaving(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-royal-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-6">
@@ -51,39 +125,59 @@ export default function Tracks() {
         </div>
       </FadeInOnScroll>
 
+      {/* Empty State */}
+      {filteredTracks.length === 0 && !loading && (
+        <div className="text-center py-16">
+          <Music className="w-16 h-16 text-white/20 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-white mb-2">No tracks yet</h3>
+          <p className="text-white/50 mb-6">Add your first track to start tracking royalties</p>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="btn-primary inline-flex items-center gap-2"
+          >
+            <Plus className="w-5 h-5" />
+            Add Your First Track
+          </button>
+        </div>
+      )}
+
       {/* Tracks List */}
       <StaggerContainer className="space-y-3">
         {filteredTracks.map((track) => (
           <StaggerItem key={track.id}>
             <div className="glass-card rounded-xl p-4 flex items-center gap-4 hover:border-royal-500/30 transition-colors group">
               <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-royal-600/30 to-gold-500/20 flex items-center justify-center flex-shrink-0">
-                <Music className="w-6 h-6 text-red-500" />
+                <Music className="w-6 h-6 text-royal-500" />
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold text-white truncate">{track.title}</h3>
-                  {track.status === 'complete' ? (
-                    <CheckCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                  {isComplete(track.registration_status) ? (
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
                   ) : (
                     <AlertCircle className="w-4 h-4 text-gold-400 flex-shrink-0" />
                   )}
                 </div>
-                <p className="text-sm text-white/50">ISRC: {track.isrc}</p>
+                <p className="text-sm text-white/50">{track.isrc ? `ISRC: ${track.isrc}` : 'No ISRC'}</p>
               </div>
 
               <div className="hidden sm:flex items-center gap-8">
                 <div className="text-right">
                   <div className="flex items-center gap-1 text-white/60">
                     <Play className="w-4 h-4" />
-                    <span className="text-sm">{(track.streams / 1000).toFixed(1)}K</span>
+                    <span className="text-sm">
+                      {track.total_streams >= 1000 
+                        ? `${(track.total_streams / 1000).toFixed(1)}K` 
+                        : track.total_streams}
+                    </span>
                   </div>
                   <span className="text-xs text-white/40">streams</span>
                 </div>
                 <div className="text-right">
                   <div className="flex items-center gap-1 text-green-400">
                     <DollarSign className="w-4 h-4" />
-                    <span className="text-sm">{track.earnings.toFixed(2)}</span>
+                    <span className="text-sm">{Number(track.total_earnings || 0).toFixed(2)}</span>
                   </div>
                   <span className="text-xs text-white/40">earnings</span>
                 </div>
@@ -112,18 +206,45 @@ export default function Tracks() {
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-2xl font-bold text-white mb-6">Add New Track</h2>
-            <form className="space-y-4">
+            <form onSubmit={handleAddTrack} className="space-y-4">
               <div>
                 <label className="block text-sm text-white/70 mb-2">Track Title</label>
-                <input type="text" placeholder="Enter track title" className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white placeholder-white/30 focus:outline-none focus:border-royal-500" />
+                <input 
+                  type="text" 
+                  value={newTrack.title}
+                  onChange={(e) => setNewTrack(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Enter track title" 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white placeholder-white/30 focus:outline-none focus:border-royal-500" 
+                  required
+                />
               </div>
               <div>
-                <label className="block text-sm text-white/70 mb-2">ISRC Code</label>
-                <input type="text" placeholder="e.g., USRC12345678" className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white placeholder-white/30 focus:outline-none focus:border-royal-500" />
+                <label className="block text-sm text-white/70 mb-2">ISRC Code (optional)</label>
+                <input 
+                  type="text" 
+                  value={newTrack.isrc}
+                  onChange={(e) => setNewTrack(prev => ({ ...prev, isrc: e.target.value }))}
+                  placeholder="e.g., USRC12345678" 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white placeholder-white/30 focus:outline-none focus:border-royal-500" 
+                />
               </div>
               <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 py-3 border border-white/20 rounded-xl text-white hover:bg-white/5">Cancel</button>
-                <button type="submit" className="flex-1 btn-primary py-3">Add Track</button>
+                <button 
+                  type="button" 
+                  onClick={() => setShowAddModal(false)} 
+                  className="flex-1 py-3 border border-white/20 rounded-xl text-white hover:bg-white/5"
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="flex-1 btn-primary py-3 flex items-center justify-center gap-2"
+                  disabled={saving}
+                >
+                  {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+                  Add Track
+                </button>
               </div>
             </form>
           </motion.div>

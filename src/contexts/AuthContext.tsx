@@ -20,8 +20,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 	const refreshUser = useCallback(async () => {
 		if (!supabase) return;
-		const { data } = await supabase.auth.getUser();
-		setUser(data.user ?? null);
+		// Force refresh the session from server to get updated app_metadata (including subscription_status)
+		const { data, error } = await supabase.auth.refreshSession();
+		if (!error && data.user) {
+			setUser(data.user);
+		}
 	}, []);
 
 	useEffect(() => {
