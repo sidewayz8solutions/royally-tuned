@@ -38,10 +38,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = (session.client_reference_id as string) || (session.metadata?.supabase_user_id as string);
         const customerId = (session.customer as string) || undefined;
-        if (userId && customerId) {
+        if (userId) {
+          // Set subscription_status to 'active' on checkout completion as a fallback
+          // This ensures users get access even if subscription events are delayed
           await updateUser(userId, {
             stripe_customer_id: customerId,
-            // Do not set status here; subscription events will handle it
+            subscription_status: 'active',
           });
         }
         break;
@@ -51,7 +53,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       case 'customer.subscription.deleted': {
         const sub = event.data.object as Stripe.Subscription;
         const customerId = sub.customer as string;
-        const userId = (sub.metadata?.supabase_user_id as string) || undefined;
+        // Try to get userId from subscription metadata, or look it up from customer
+        let userId = (sub.metadata?.supabase_user_id as string) || undefined;
+        
+        // If no userId in subscription metadata, try to find user by customer ID
+        if (!userId && customerId) {
+          const { data: users } = await supabaseAdmin.auth.admin.listUsers();
+          const matchingUser = users?.users?.find(
+            u => (u.app_metadata as Record<string, unknown>)?.stripe_customer_id === customerId
+          );
+          if (matchingUser) {
+            userId = matchingUser.id;
+          }
+        }
+        
         const status = sub.status; // 'active' | 'trialing' | 'canceled' | ...
         if (userId) {
           await updateUser(userId, {

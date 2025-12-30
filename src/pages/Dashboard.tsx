@@ -42,12 +42,28 @@ export default function Dashboard() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   // After successful checkout, refresh user to get updated subscription status
+  // Retry multiple times in case webhook is delayed
   useEffect(() => {
     if (searchParams.get('checkout') === 'success') {
-      const timer = setTimeout(async () => {
+      let attempts = 0;
+      const maxAttempts = 5;
+      
+      const tryRefresh = async () => {
+        attempts++;
         await refreshUser();
-        setSearchParams({}, { replace: true });
-      }, 1500);
+        
+        // Check if we got a valid subscription status
+        // If not and we haven't exhausted attempts, try again
+        if (attempts < maxAttempts) {
+          setTimeout(tryRefresh, 2000);
+        } else {
+          // Done trying - clear the query param
+          setSearchParams({}, { replace: true });
+        }
+      };
+      
+      // Start after initial delay for webhook processing
+      const timer = setTimeout(tryRefresh, 2000);
       return () => clearTimeout(timer);
     }
   }, [searchParams, setSearchParams, refreshUser]);

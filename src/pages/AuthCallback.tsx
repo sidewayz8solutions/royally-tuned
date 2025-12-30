@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabaseClient';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
+  const [message, setMessage] = useState<string>('Verifying your email...');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -15,51 +16,51 @@ export default function AuthCallback() {
       }
 
       try {
-        // Supabase email confirmations may return either:
-        // - PKCE flow: ?code=... (needs exchangeCodeForSession)
-        // - Implicit flow: #access_token=... (getSession will pick this up)
         const url = new URL(window.location.href);
         const code = url.searchParams.get('code');
+        
         if (code) {
+          // Exchange the code to complete email verification
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          
           if (exchangeError) {
             console.error('Auth callback exchange error:', exchangeError);
             setError(exchangeError.message);
             return;
           }
-          // Clean the URL (remove code) to avoid repeated exchanges on refresh
+          
+          // Sign out immediately - we want user to login with their password
+          await supabase.auth.signOut();
+          
+          // Clean the URL
           window.history.replaceState({}, document.title, url.pathname);
-        }
-
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Auth callback error:', error);
-          setError(error.message);
+          
+          // Show success and redirect to login
+          setMessage('Email verified! Redirecting to login...');
+          setTimeout(() => {
+            navigate('/login', { replace: true });
+          }, 2000);
           return;
         }
 
-        if (data.session) {
-          // Successfully authenticated
-          const sub = data.session.user?.app_metadata?.subscription_status;
-          const isPaid = sub === 'pro' || sub === 'active';
-          navigate(isPaid ? '/app' : '/pricing', { replace: true });
-        } else {
-          // No session found - might still be processing
-          // Wait a moment and check again
-          setTimeout(async () => {
-            if (!supabase) return;
-            const { data: retryData, error: retryError } = await supabase.auth.getSession();
-            if (retryError || !retryData.session) {
-              setError('Unable to verify your email. Please try signing in again.');
-              setTimeout(() => navigate('/login', { replace: true }), 3000);
-            } else {
-              const status = retryData.session.user?.app_metadata?.subscription_status;
-              const isPaid = status === 'pro' || status === 'active';
-              navigate(isPaid ? '/app' : '/pricing', { replace: true });
-            }
-          }, 1000);
+        // No code found - check if there's a hash fragment (implicit flow)
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        
+        if (accessToken) {
+          // Implicit flow - sign out and redirect to login
+          await supabase.auth.signOut();
+          setMessage('Email verified! Redirecting to login...');
+          setTimeout(() => {
+            navigate('/login', { replace: true });
+          }, 2000);
+          return;
         }
+
+        // No auth params found
+        setError('Invalid verification link. Please try signing up again.');
+        setTimeout(() => navigate('/signup', { replace: true }), 3000);
+        
       } catch (err) {
         console.error('Unexpected error during auth callback:', err);
         setError('An unexpected error occurred');
@@ -74,7 +75,7 @@ export default function AuthCallback() {
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6">
         <div className="text-center">
           <p className="text-red-500 mb-4">{error}</p>
-          <p className="text-white/60">Redirecting to sign up...</p>
+          <p className="text-white/60">Redirecting...</p>
         </div>
       </div>
     );
@@ -88,7 +89,7 @@ export default function AuthCallback() {
         animate={{ opacity: 1 }}
       >
         <div className="w-12 h-12 border-4 border-royal-600 border-t-transparent rounded-full animate-spin" />
-        <p className="text-white/60">Verifying your email...</p>
+        <p className="text-white/60">{message}</p>
       </motion.div>
     </div>
   );
