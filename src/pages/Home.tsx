@@ -37,7 +37,7 @@ export default function Home() {
               <img
                 src="/logo2.png"
                 alt="Royally Tuned"
-                className="h-32 md:h-44 w-auto mx-auto drop-shadow-[0_0_40px_rgba(124,58,237,0.5)]"
+                className="h-64 md:h-88 w-auto mx-auto drop-shadow-[0_0_40px_rgba(124,58,237,0.5)]"
               />
             </Float>
           </motion.div>
