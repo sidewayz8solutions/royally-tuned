@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import About from './pages/About';
 import Pricing from './pages/Pricing';
 import SignUp from './pages/SignUp';
+import Login from './pages/Login';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Dashboard from './pages/Dashboard';
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="/about" element={<About />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
         </Route>

@@ -52,7 +52,7 @@ export default function AuthCallback() {
             const { data: retryData, error: retryError } = await supabase.auth.getSession();
             if (retryError || !retryData.session) {
               setError('Unable to verify your email. Please try signing in again.');
-              setTimeout(() => navigate('/signup', { replace: true }), 3000);
+              setTimeout(() => navigate('/login', { replace: true }), 3000);
             } else {
               const status = retryData.session.user?.app_metadata?.subscription_status;
               const isPaid = status === 'pro' || status === 'active';

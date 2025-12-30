@@ -4,8 +4,8 @@ import { Crown, Mail, CheckCircle, ArrowRight, Loader2, Lock } from 'lucide-reac
 import { useAuth } from '../contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 
-export default function SignUp() {
-	const [mode, setMode] = useState<'signup' | 'login'>('signup');
+export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'signup' | 'login' }) {
+	const [mode, setMode] = useState<'signup' | 'login'>(defaultMode);
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [confirmPassword, setConfirmPassword] = useState('');
@@ -68,7 +68,8 @@ export default function SignUp() {
 							<span className="text-white font-medium">{email}</span>
 						</p>
 						<p className="text-white/50 text-sm mb-8">
-							Click the link in your email to verify your account, then you'll be redirected back here to complete your subscription.
+							Click the link in your email to verify your account. We'll try to sign you in automatically and take you to payment.
+							If anything goes wrong, just log in here after confirming.
 						</p>
 						<div className="space-y-3">
 							<button
