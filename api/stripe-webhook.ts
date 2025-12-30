@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { supabaseAdmin } from './_supabaseAdmin.js';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, { apiVersion: '2025-12-15.clover' });
 
@@ -9,7 +10,7 @@ async function updateUser(userId: string, fields: Record<string, unknown>) {
   });
 }
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
   const sig = req.headers['stripe-signature'] as string | undefined;
@@ -28,7 +29,7 @@ export default async function handler(req: any, res: any) {
     }
   } catch (err) {
     console.error('Webhook signature verification failed.', err);
-    return res.status(400).send(`Webhook Error: ${(err as any).message}`);
+    return res.status(400).send(`Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
   }
 
   try {
@@ -38,11 +39,9 @@ export default async function handler(req: any, res: any) {
         const userId = (session.client_reference_id as string) || (session.metadata?.supabase_user_id as string);
         const customerId = (session.customer as string) || undefined;
         if (userId && customerId) {
-          await supabaseAdmin.auth.admin.updateUserById(userId, {
-            app_metadata: {
-              stripe_customer_id: customerId,
-              // Do not set status here; subscription events will handle it
-            },
+          await updateUser(userId, {
+            stripe_customer_id: customerId,
+            // Do not set status here; subscription events will handle it
           });
         }
         break;
@@ -55,11 +54,9 @@ export default async function handler(req: any, res: any) {
         const userId = (sub.metadata?.supabase_user_id as string) || undefined;
         const status = sub.status; // 'active' | 'trialing' | 'canceled' | ...
         if (userId) {
-          await supabaseAdmin.auth.admin.updateUserById(userId, {
-            app_metadata: {
-              stripe_customer_id: customerId,
-              subscription_status: status,
-            },
+          await updateUser(userId, {
+            stripe_customer_id: customerId,
+            subscription_status: status,
           });
         }
         break;
