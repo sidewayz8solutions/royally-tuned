@@ -58,16 +58,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			setLoading(false);
 			return;
 		}
+		let isMounted = true;
 		const init = async () => {
-			const { data } = await supabase!.auth.getUser();
-			setUser(data.user ?? null);
-			// Also fetch DB subscription status (don't block on failure)
-			if (data.user) {
-				fetchSubscriptionFromDB(data.user.id).then(status => {
-					if (status) setDbSubscriptionStatus(status);
-				});
+			try {
+				const { data } = await supabase!.auth.getUser();
+				if (!isMounted) return;
+				setUser(data.user ?? null);
+				// Also fetch DB subscription status (don't block on failure)
+				if (data.user) {
+					fetchSubscriptionFromDB(data.user.id).then(status => {
+						if (status && isMounted) setDbSubscriptionStatus(status);
+					});
+				}
+			} catch (e) {
+				console.warn('Init auth load failed', e);
+			} finally {
+				if (isMounted) setLoading(false);
 			}
-			setLoading(false);
 		};
 		init();
 
@@ -80,7 +87,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				setDbSubscriptionStatus(null);
 			}
 		});
-		return () => sub.subscription?.unsubscribe();
+		return () => {
+			isMounted = false;
+			sub.subscription?.unsubscribe();
+		};
 	}, [fetchSubscriptionFromDB]);
 
 	// Combine app_metadata status with DB status - DB takes priority

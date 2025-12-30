@@ -29,20 +29,19 @@ async function updateUser(userId: string, fields: Record<string, unknown>) {
   });
   
   // Also update profiles table - must use valid ENUM value
-  const profileFields: Record<string, unknown> = {};
+  const profileFields: Record<string, unknown> = { id: userId };
   if (fields.stripe_customer_id) profileFields.stripe_customer_id = fields.stripe_customer_id;
   if (fields.subscription_status) {
     // Map to valid DB enum value
     profileFields.subscription_status = mapStripeStatusToDbStatus(fields.subscription_status as string);
   }
   
-  if (Object.keys(profileFields).length > 0) {
+  if (Object.keys(profileFields).length > 1) {
     const { error } = await supabaseAdmin
       .from('profiles')
-      .update(profileFields)
-      .eq('id', userId);
+      .upsert(profileFields, { onConflict: 'id' });
     if (error) {
-      console.error('Failed to update profiles table:', error);
+      console.error('Failed to upsert profiles table:', error);
     }
   }
 }
