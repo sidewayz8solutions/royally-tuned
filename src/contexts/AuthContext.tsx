@@ -40,16 +40,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		return (meta['subscription_status'] as string) || null;
 	}, [user]);
 
-	// Standard email + password sign-up
+	// Standard email + password sign-up.
+	// After creating the user, we immediately sign them in so that
+	// hitting /pricing can go straight into Stripe Checkout.
 	const signUp = async (email: string, password: string) => {
 		try {
 			if (!supabase) return { ok: false, error: 'Auth not configured' };
 
-			const { error } = await supabase.auth.signUp({
+			const { error: signUpError } = await supabase.auth.signUp({
 				email,
 				password,
 			});
-			if (error) return { ok: false, error: error.message };
+			if (signUpError) return { ok: false, error: signUpError.message };
+
+			// Try to sign them in right away so they have a session.
+			const { error: signInError } = await supabase.auth.signInWithPassword({
+				email,
+				password,
+			});
+			if (signInError) return { ok: false, error: signInError.message };
+
 			return { ok: true };
 		} catch (e) {
 			return { ok: false, error: e instanceof Error ? e.message : 'Unknown error' };
