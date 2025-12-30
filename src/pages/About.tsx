@@ -85,8 +85,8 @@ export default function About() {
             ].map((item, i) => (
               <StaggerItem key={i}>
                 <div className="glass-card rounded-2xl p-8 text-center h-full">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-royal-600/30 to-gold-500/20 flex items-center justify-center mx-auto mb-6">
-                    <item.icon className="w-8 h-8 text-gold-400" />
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gold-500/30 to-yellow-500/20 flex items-center justify-center mx-auto mb-6">
+                    <item.icon className="w-8 h-8 text-yellow-400" />
                   </div>
                   <h3 className="text-xl font-semibold text-white mb-3">{item.title}</h3>
                   <p className="text-white/50">{item.desc}</p>
@@ -103,7 +103,7 @@ export default function About() {
           <Parallax offset={20}>
             <FadeInOnScroll>
               <div className="glass-card rounded-3xl p-12 glow-purple">
-                <Crown className="w-16 h-16 text-gold-400 mx-auto mb-6" />
+                <Crown className="w-16 h-16 text-yellow-400 mx-auto mb-6" />
                 <h2 className="text-3xl font-bold text-white mb-4">
                   Artist-First. Always.
                 </h2>
