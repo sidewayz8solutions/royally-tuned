@@ -5,7 +5,7 @@ import { FadeInOnScroll, TiltCard, StaggerContainer, StaggerItem } from '../comp
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Pricing() {
-	const { user, subscriptionStatus, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 	const [checkoutLoading, setCheckoutLoading] = useState(false);
 	const [error, setError] = useState('');
 
