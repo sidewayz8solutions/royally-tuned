@@ -1,53 +1,53 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Crown, CheckCircle, ArrowRight, Zap, Shield, BarChart3 } from 'lucide-react';
 import { FadeInOnScroll, TiltCard, StaggerContainer, StaggerItem } from '../components/animations';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Pricing() {
-  const { user } = useAuth();
-  const [searchParams] = useSearchParams();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+	const { user, subscriptionStatus, loading: authLoading } = useAuth();
+	const [checkoutLoading, setCheckoutLoading] = useState(false);
+	const [error, setError] = useState('');
 
-  const startCheckout = async () => {
-    // If somehow we don't have a user yet, send them to signup first
-    if (!user) {
-      window.location.href = '/signup';
-      return;
-    }
+	const startCheckout = async () => {
+		// If somehow we don't have a user yet, send them to signup first
+		if (!user) {
+			window.location.href = '/signup';
+			return;
+		}
 
-    try {
-      setError('');
-      setLoading(true);
-      const res = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id }),
-      });
+		try {
+			setError('');
+			setCheckoutLoading(true);
+			const res = await fetch('/api/create-checkout-session', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ userId: user.id }),
+			});
 
-      const data = await res.json();
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        setError(data?.error || 'Unable to start checkout. Please try again.');
-      }
-    } catch {
-      setError('Unable to start checkout. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+			const data = await res.json();
+			if (data?.url) {
+				window.location.href = data.url;
+			} else {
+				setError(data?.error || 'Unable to start checkout. Please try again.');
+			}
+		} catch {
+			setError('Unable to start checkout. Please try again.');
+		} finally {
+			setCheckoutLoading(false);
+		}
+	};
 
-  // If we arrive from email confirmation with checkout=start, immediately kick off Stripe Checkout
-  useEffect(() => {
-    if (searchParams.get('checkout') === 'start' && user) {
-      startCheckout();
-    }
-    // We intentionally only react to changes in the query param and user
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, user]);
+	// As soon as a logged-in, non-subscribed user lands on Pricing,
+	// automatically kick off Stripe Checkout.
+	useEffect(() => {
+		if (authLoading) return;
+		if (!user) return;
+		if (subscriptionStatus === 'active') return;
+
+		startCheckout();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [authLoading, user, subscriptionStatus]);
 
   return (
     <div className="overflow-hidden">
@@ -115,15 +115,15 @@ export default function Pricing() {
                     ))}
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={startCheckout}
-                    className="w-full btn-primary text-lg py-4 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-                    disabled={loading}
-                  >
-                    {loading ? 'Redirecting to checkout...' : 'Get Started'}
-                    <ArrowRight className="w-5 h-5" />
-                  </button>
+						<button
+							type="button"
+							onClick={startCheckout}
+							className="w-full btn-primary text-lg py-4 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+							disabled={checkoutLoading}
+						>
+							{checkoutLoading ? 'Redirecting to checkout...' : 'Get Started'}
+							<ArrowRight className="w-5 h-5" />
+						</button>
 
                   {error && (
                     <p className="mt-3 text-sm text-red-400 text-center">
