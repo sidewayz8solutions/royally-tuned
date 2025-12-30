@@ -1,6 +1,9 @@
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { DollarSign, Music, TrendingUp, BarChart3, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { FadeInOnScroll, StaggerContainer, StaggerItem, TiltCard } from '../components/animations';
+import { useSearchParams } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const mockStats = [
   { label: 'Total Earnings', value: '$2,847.32', change: '+12.5%', up: true, icon: DollarSign },
@@ -27,6 +30,21 @@ const mockActivity = [
 
 export default function Dashboard() {
   const maxAmount = Math.max(...mockEarnings.map(e => e.amount));
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { refreshUser } = useAuth();
+
+  // After successful checkout, refresh user to get updated subscription status
+  useEffect(() => {
+    if (searchParams.get('checkout') === 'success') {
+      // Give the webhook a moment to process, then refresh user data
+      const timer = setTimeout(async () => {
+        await refreshUser();
+        // Clear the query param so we don't keep refreshing
+        setSearchParams({}, { replace: true });
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, setSearchParams, refreshUser]);
 
   return (
     <div className="max-w-7xl mx-auto px-6">

@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
 
@@ -8,6 +8,11 @@ interface RequireAuthProps {
 
 export default function RequireAuth({ children }: RequireAuthProps) {
   const { user, loading, subscriptionStatus } = useAuth();
+  const location = useLocation();
+
+  // Check if user just completed checkout - allow them through while we refresh their data
+  const searchParams = new URLSearchParams(location.search);
+  const justPaid = searchParams.get('checkout') === 'success';
 
   if (loading) {
     return (
@@ -29,13 +34,14 @@ export default function RequireAuth({ children }: RequireAuthProps) {
     return <Navigate to="/signup" replace />;
   }
 
-	  // No active subscription - redirect to pricing
-	  // Supabase app_metadata.subscription_status mirrors Stripe status (e.g. 'trialing', 'active', 'canceled').
-	  // Treat active/trialing (and legacy 'pro') as paid access.
-	  const isPaid = subscriptionStatus === 'pro' || subscriptionStatus === 'active' || subscriptionStatus === 'trialing';
-	  if (!isPaid) {
-	    return <Navigate to="/pricing" replace />;
-	  }
+  // No active subscription - redirect to pricing
+  // Supabase app_metadata.subscription_status mirrors Stripe status (e.g. 'trialing', 'active', 'canceled').
+  // Treat active/trialing (and legacy 'pro') as paid access.
+  // Also allow through if ?checkout=success - Dashboard will refresh user data
+  const isPaid = subscriptionStatus === 'pro' || subscriptionStatus === 'active' || subscriptionStatus === 'trialing';
+  if (!isPaid && !justPaid) {
+    return <Navigate to="/pricing" replace />;
+  }
 
   return <>{children}</>;
 }

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 
@@ -9,6 +9,7 @@ interface AuthContextValue {
 	signUp: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
 	signIn: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
 	signOut: () => Promise<void>;
+	refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -16,6 +17,12 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const [user, setUser] = useState<User | null>(null);
 	const [loading, setLoading] = useState(true);
+
+	const refreshUser = useCallback(async () => {
+		if (!supabase) return;
+		const { data } = await supabase.auth.getUser();
+		setUser(data.user ?? null);
+	}, []);
 
 	useEffect(() => {
 		if (!supabase) {
@@ -80,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		await supabase.auth.signOut();
 	};
 
-	const value: AuthContextValue = { user, loading, subscriptionStatus, signUp, signIn, signOut };
+	const value: AuthContextValue = { user, loading, subscriptionStatus, signUp, signIn, signOut, refreshUser };
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
