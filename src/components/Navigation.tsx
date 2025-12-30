@@ -20,6 +20,7 @@ export function PublicNav() {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3 group">
               <img src="/logo2.png" alt="Royally Tuned" className="h-12 w-auto" />
+              <span className="brand-script text-2xl text-white">Royally Tuned</span>
             </Link>
 
             {/* Desktop Nav */}
@@ -108,6 +109,7 @@ export function AppNav() {
         <div className="flex items-center justify-between">
           <Link to="/app" className="flex items-center gap-3 group">
             <img src="/logo2.png" alt="Royally Tuned" className="h-12 w-auto" />
+            <span className="brand-script text-2xl text-white">Royally Tuned</span>
           </Link>
 
           <div className="flex items-center gap-6">
