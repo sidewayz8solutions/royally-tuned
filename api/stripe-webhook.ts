@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
 import { supabaseAdmin } from './_supabaseAdmin.js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, { apiVersion: '2024-11-20.acacia' });
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, { apiVersion: '2025-12-15.clover' });
 
 async function updateUser(userId: string, fields: Record<string, unknown>) {
   await supabaseAdmin.auth.admin.updateUserById(userId, {
