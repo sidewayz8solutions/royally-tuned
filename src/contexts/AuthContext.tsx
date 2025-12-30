@@ -42,7 +42,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithEmail = async (email: string) => {
     try {
       if (!supabase) return { ok: false, error: 'Auth not configured' };
-      const { error } = await supabase.auth.signInWithOtp({ email });
+
+      // Build the redirect URL for the auth callback
+      const redirectUrl = `${window.location.origin}/auth/callback`;
+
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: redirectUrl,
+        }
+      });
       if (error) return { ok: false, error: error.message };
       return { ok: true };
     } catch (e) {

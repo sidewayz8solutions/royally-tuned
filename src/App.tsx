@@ -14,11 +14,15 @@ import Checklist from './pages/Checklist';
 import Toolkit from './pages/Toolkit';
 import Profile from './pages/Profile';
 import RequireAuth from './components/RequireAuth';
+import AuthCallback from './pages/AuthCallback';
 
 export default function App() {
   return (
     <AnimatePresence mode="wait">
       <Routes>
+        {/* Auth Callback - handles magic link redirects */}
+        <Route path="/auth/callback" element={<AuthCallback />} />
+
         {/* Public Pages - Marketing & Onboarding */}
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Home />} />
