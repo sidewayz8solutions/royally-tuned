@@ -27,15 +27,23 @@ export default function Tracks() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [newTrack, setNewTrack] = useState({ title: '', isrc: '' });
+  const supabaseMissing = !supabase;
 
   // Fetch tracks from Supabase
   useEffect(() => {
-    if (!user || !supabase) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
     
     const fetchTracks = async () => {
-      if (!supabase) return; // Add null check here
       setLoading(true);
-      const { data, error } = await supabase
+      const client = supabase!;
+      const { data, error } = await client
         .from('tracks')
         .select('*')
         .eq('user_id', user.id)
@@ -84,6 +92,14 @@ export default function Tracks() {
     }
     setSaving(false);
   };
+
+  if (supabaseMissing) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 flex items-center justify-center min-h-[400px] text-white/70">
+        Supabase is not configured (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY missing). Add env vars and redeploy.
+      </div>
+    );
+  }
 
   if (loading) {
     return (

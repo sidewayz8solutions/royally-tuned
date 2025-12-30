@@ -40,6 +40,7 @@ export default function Dashboard() {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [earnings, setEarnings] = useState<Earning[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const supabaseMissing = !supabase;
 
   // After successful checkout, refresh user to get updated subscription status
   // Retry multiple times in case webhook is delayed
@@ -70,22 +71,28 @@ export default function Dashboard() {
 
   // Fetch real data from Supabase
   useEffect(() => {
-    if (!user || !supabase) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
     
     const fetchData = async () => {
-      if (!supabase) return; // Add null check here
-      
       setLoading(true);
       try {
+        const client = supabase!;
         // Fetch tracks
-        const { data: tracksData } = await supabase
+        const { data: tracksData } = await client
           .from('tracks')
           .select('*')
           .eq('user_id', user.id)
           .eq('is_active', true);
         
         // Fetch earnings with track titles
-        const { data: earningsData } = await supabase
+        const { data: earningsData } = await client
           .from('earnings')
           .select('*, tracks(title)')
           .eq('user_id', user.id)
@@ -93,7 +100,7 @@ export default function Dashboard() {
           .limit(50);
         
         // Fetch notifications
-        const { data: notificationsData } = await supabase
+        const { data: notificationsData } = await client
           .from('notifications')
           .select('*')
           .eq('user_id', user.id)
@@ -191,6 +198,14 @@ export default function Dashboard() {
     // Sort by recency and take top 5
     return activity.slice(0, 5);
   }, [earnings, notifications]);
+
+  if (supabaseMissing) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 flex items-center justify-center min-h-[400px] text-white/70">
+        Supabase is not configured (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY missing). Add env vars and redeploy.
+      </div>
+    );
+  }
 
   if (loading) {
     return (

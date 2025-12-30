@@ -47,20 +47,23 @@ export default function Checklist() {
   const [expandedCategory, setExpandedCategory] = useState<string | null>('registration');
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const supabaseMissing = !supabase;
 
   // Fetch checklist items from Supabase
   useEffect(() => {
-    if (!user || !supabase) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
 
     const fetchChecklist = async () => {
       setLoading(true);
-      
-      if (!supabase) {
-        setLoading(false);
-        return;
-      }
-      
-      const { data, error } = await supabase
+      const client = supabase!;
+      const { data, error } = await client
         .from('checklist_items')
         .select('*')
         .eq('user_id', user.id)
@@ -75,7 +78,7 @@ export default function Checklist() {
           user_id: user.id,
         }));
         
-        const { data: inserted } = await supabase
+        const { data: inserted } = await client
           .from('checklist_items')
           .insert(newItems)
           .select();
@@ -123,6 +126,14 @@ export default function Checklist() {
   const totalItems = items.length;
   const completedItems = items.filter(i => i.completed).length;
   const progressPercent = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
+  if (supabaseMissing) {
+    return (
+      <div className="max-w-4xl mx-auto px-6 flex items-center justify-center min-h-[400px] text-white/70">
+        Supabase is not configured (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY missing). Add env vars and redeploy.
+      </div>
+    );
+  }
 
   if (loading) {
     return (
