@@ -57,14 +57,14 @@ export default function Tracks() {
           <StaggerItem key={track.id}>
             <div className="glass-card rounded-xl p-4 flex items-center gap-4 hover:border-royal-500/30 transition-colors group">
               <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-royal-600/30 to-gold-500/20 flex items-center justify-center flex-shrink-0">
-                <Music className="w-6 h-6 text-crimson-400" />
+                <Music className="w-6 h-6 text-red-500" />
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold text-white truncate">{track.title}</h3>
                   {track.status === 'complete' ? (
-                    <CheckCircle className="w-4 h-4 text-crimson-400 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
                   ) : (
                     <AlertCircle className="w-4 h-4 text-gold-400 flex-shrink-0" />
                   )}

@@ -67,7 +67,7 @@ export default function SignUp() {
                 </div>
 
                 {error && (
-                  <p className="text-sm text-crimson-400">{error}</p>
+                  <p className="text-sm text-red-500">{error}</p>
                 )}
 
                 <button
@@ -90,7 +90,7 @@ export default function SignUp() {
                 <div className="space-y-3 text-sm">
                   {['Full dashboard access', 'All royalty tools', 'Cancel anytime'].map((item, i) => (
                     <div key={i} className="flex items-center gap-2 text-white/60">
-                      <CheckCircle className="w-4 h-4 text-crimson-400" />
+                      <CheckCircle className="w-4 h-4 text-red-500" />
                       {item}
                     </div>
                   ))}

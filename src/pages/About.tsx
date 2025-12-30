@@ -15,7 +15,7 @@ export default function About() {
             transition={{ duration: 0.6 }}
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-royal-600/20 border border-royal-500/30 mb-8">
-              <Heart className="w-4 h-4 text-crimson-400" />
+              <Heart className="w-4 h-4 text-red-500" />
               <span className="text-sm text-white/80">Built by Musicians, for Musicians</span>
             </div>
             
@@ -53,7 +53,7 @@ export default function About() {
                 
                 <p>
                   Major labels have entire departments dedicated to tracking royalties. 
-                  <span className="text-crimson-400"> Independent artists? They're on their own.</span>
+                  <span className="text-red-500"> Independent artists? They're on their own.</span>
                 </p>
                 
                 <p className="text-white">

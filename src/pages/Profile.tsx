@@ -190,7 +190,7 @@ export default function Profile() {
             </div>
 
             {/* Sign Out */}
-            <button onClick={signOut} className="w-full py-3 text-sm border border-crimson-500/30 text-crimson-400 rounded-xl hover:bg-crimson-500/10 transition-colors">
+            <button onClick={signOut} className="w-full py-3 text-sm border border-red-500/30 text-red-500 rounded-xl hover:bg-red-500/10 transition-colors">
               Sign Out
             </button>
           </div>

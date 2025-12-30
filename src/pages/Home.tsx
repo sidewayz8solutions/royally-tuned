@@ -145,7 +145,7 @@ export default function Home() {
                 ].map((item, i) => (
                   <div key={i} className="flex gap-4">
                     <div className="w-12 h-12 rounded-xl bg-royal-600/20 flex items-center justify-center flex-shrink-0">
-                      <item.icon className="w-6 h-6 text-crimson-400" />
+                      <item.icon className="w-6 h-6 text-red-500" />
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-white mb-1">{item.title}</h3>
@@ -162,7 +162,7 @@ export default function Home() {
                   <div className="space-y-4">
                     {['PRO Registration', 'SoundExchange', 'MLC Registration', 'Distributor Setup'].map((item, i) => (
                       <div key={i} className="flex items-center gap-3 p-4 rounded-xl bg-white/5">
-                        <CheckCircle className="w-5 h-5 text-crimson-400" />
+                        <CheckCircle className="w-5 h-5 text-red-500" />
                         <span className="text-white">{item}</span>
                         <span className="ml-auto text-xs text-green-400 bg-green-500/20 px-2 py-1 rounded">Complete</span>
                       </div>
@@ -254,7 +254,7 @@ export default function Home() {
                       'Priority support',
                     ].map((feature, i) => (
                       <div key={i} className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-crimson-400 flex-shrink-0" />
+                        <CheckCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
                         <span className="text-sm text-white/70">{feature}</span>
                       </div>
                     ))}
