@@ -1,16 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Crown, CheckCircle, ArrowRight, Zap, Shield, BarChart3 } from 'lucide-react';
 import { FadeInOnScroll, TiltCard, StaggerContainer, StaggerItem } from '../components/animations';
 import { useAuth } from '../contexts/AuthContext';
-import { useSearchParams } from 'react-router-dom';
 
 export default function Pricing() {
 	const { user, subscriptionStatus, loading: authLoading } = useAuth();
 	const [checkoutLoading, setCheckoutLoading] = useState(false);
 	const [error, setError] = useState('');
-	const [searchParams] = useSearchParams();
-	const shouldAutoCheckout = searchParams.get('checkout') === 'start';
 
 	const startCheckout = async () => {
 		// If somehow we don't have a user yet, send them to signup first
@@ -41,16 +38,21 @@ export default function Pricing() {
 		}
 	};
 
-	// Only auto-checkout if explicitly requested via URL param
-	useEffect(() => {
-		if (authLoading) return;
-		if (!user) return;
-		if (subscriptionStatus === 'active') return;
-		if (!shouldAutoCheckout) return;
+	// Determine button text and state
+	const getButtonContent = () => {
+		if (authLoading) return 'Loading...';
+		if (checkoutLoading) return 'Redirecting to checkout...';
+		if (user) return 'Continue to Payment';
+		return 'Get Started';
+	};
 
-		startCheckout();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [authLoading, user, subscriptionStatus, shouldAutoCheckout]);
+	const handleButtonClick = () => {
+		if (!user) {
+			window.location.href = '/signup';
+		} else {
+			startCheckout();
+		}
+	};
 
   return (
     <div className="overflow-hidden">
@@ -99,6 +101,15 @@ export default function Pricing() {
                     <p className="text-white/50 mt-2">Cancel anytime. No contracts.</p>
                   </div>
 
+                  {/* Show welcome message for logged-in users */}
+                  {user && !authLoading && (
+                    <div className="mb-6 p-4 rounded-xl bg-green-500/10 border border-green-500/20">
+                      <p className="text-green-400 text-center font-medium">
+                        ✓ Email verified! Click below to complete your subscription.
+                      </p>
+                    </div>
+                  )}
+
                   <div className="space-y-4 mb-8">
                     {[
                       'Unlimited track management',
@@ -120,11 +131,11 @@ export default function Pricing() {
 
 						<button
 							type="button"
-							onClick={startCheckout}
+							onClick={handleButtonClick}
 							className="w-full btn-primary text-lg py-4 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-							disabled={checkoutLoading}
+							disabled={checkoutLoading || authLoading}
 						>
-							{checkoutLoading ? 'Redirecting to checkout...' : 'Get Started'}
+							{getButtonContent()}
 							<ArrowRight className="w-5 h-5" />
 						</button>
 

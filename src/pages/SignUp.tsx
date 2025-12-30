@@ -11,6 +11,7 @@ export default function SignUp() {
 	const [confirmPassword, setConfirmPassword] = useState('');
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
+	const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
 	const { signUp, signIn } = useAuth();
 	const navigate = useNavigate();
 
@@ -36,8 +37,8 @@ export default function SignUp() {
 
 		if (result.ok) {
 			if (mode === 'signup') {
-				// New account created – send them to pricing to start checkout
-				navigate('/pricing?checkout=start', { replace: true });
+				// Show email confirmation message
+				setShowEmailConfirmation(true);
 			} else {
 				// Logged in – send toward the app, RequireAuth will gate by subscription
 				navigate('/app', { replace: true });
@@ -46,6 +47,43 @@ export default function SignUp() {
 			setError(result.error || 'Something went wrong. Please try again.');
 		}
 	};
+
+	// Show email confirmation screen after signup
+	if (showEmailConfirmation) {
+		return (
+			<div className="min-h-[80vh] flex items-center justify-center px-6 py-24">
+				<div className="max-w-md w-full">
+					<motion.div
+						initial={{ opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ duration: 0.6 }}
+						className="glass-card rounded-3xl p-10 text-center"
+					>
+						<div className="w-20 h-20 rounded-full bg-gradient-to-br from-royal-600/30 to-gold-500/20 flex items-center justify-center mx-auto mb-6">
+							<Mail className="w-10 h-10 text-gold-400" />
+						</div>
+						<h1 className="text-3xl font-bold text-white mb-4">Check your email</h1>
+						<p className="text-white/60 mb-6">
+							We sent a confirmation link to<br />
+							<span className="text-white font-medium">{email}</span>
+						</p>
+						<p className="text-white/50 text-sm mb-8">
+							Click the link in your email to verify your account, then you'll be redirected back here to complete your subscription.
+						</p>
+						<div className="space-y-3">
+							<button
+								type="button"
+								onClick={() => setShowEmailConfirmation(false)}
+								className="w-full btn-secondary py-3"
+							>
+								Use a different email
+							</button>
+						</div>
+					</motion.div>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="min-h-[80vh] flex items-center justify-center px-6 py-24">
