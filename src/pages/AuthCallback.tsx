@@ -15,7 +15,22 @@ export default function AuthCallback() {
       }
 
       try {
-        // Get the session from the URL hash
+        // Supabase email confirmations may return either:
+        // - PKCE flow: ?code=... (needs exchangeCodeForSession)
+        // - Implicit flow: #access_token=... (getSession will pick this up)
+        const url = new URL(window.location.href);
+        const code = url.searchParams.get('code');
+        if (code) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError) {
+            console.error('Auth callback exchange error:', exchangeError);
+            setError(exchangeError.message);
+            return;
+          }
+          // Clean the URL (remove code) to avoid repeated exchanges on refresh
+          window.history.replaceState({}, document.title, url.pathname);
+        }
+
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -26,15 +41,9 @@ export default function AuthCallback() {
 
         if (data.session) {
           // Successfully authenticated
-          const subscriptionStatus = data.session.user?.app_metadata?.subscription_status;
-
-          if (subscriptionStatus === 'active') {
-            // Existing subscriber → take them straight into the app
-            navigate('/app', { replace: true });
-          } else {
-            // New or non-subscribed user → send to pricing (user clicks Pay)
-            navigate('/pricing', { replace: true });
-          }
+          const sub = data.session.user?.app_metadata?.subscription_status;
+          const isPaid = sub === 'pro' || sub === 'active';
+          navigate(isPaid ? '/app' : '/pricing', { replace: true });
         } else {
           // No session found - might still be processing
           // Wait a moment and check again
@@ -46,7 +55,8 @@ export default function AuthCallback() {
               setTimeout(() => navigate('/signup', { replace: true }), 3000);
             } else {
               const status = retryData.session.user?.app_metadata?.subscription_status;
-              navigate(status === 'active' ? '/app' : '/pricing', { replace: true });
+              const isPaid = status === 'pro' || status === 'active';
+              navigate(isPaid ? '/app' : '/pricing', { replace: true });
             }
           }, 1000);
         }
