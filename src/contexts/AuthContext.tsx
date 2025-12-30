@@ -59,6 +59,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			return;
 		}
 		let isMounted = true;
+		// Failsafe: never stay in loading state forever
+		const loadingTimeout = setTimeout(() => {
+			if (isMounted) setLoading(false);
+		}, 3000);
+
 		const init = async () => {
 			try {
 				const { data } = await supabase!.auth.getUser();
@@ -90,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		return () => {
 			isMounted = false;
 			sub.subscription?.unsubscribe();
+			clearTimeout(loadingTimeout);
 		};
 	}, [fetchSubscriptionFromDB]);
 

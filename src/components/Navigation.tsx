@@ -10,7 +10,7 @@ export function PublicNav() {
   const location = useLocation();
   const { user, subscriptionStatus } = useAuth();
 
-  const isSubscribed = user && subscriptionStatus === 'active';
+  const isSubscribed = user && (subscriptionStatus === 'active' || subscriptionStatus === 'pro' || subscriptionStatus === 'trialing');
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50">
