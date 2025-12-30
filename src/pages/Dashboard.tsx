@@ -45,7 +45,7 @@ export default function Dashboard() {
               <div className="glass-card rounded-2xl p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-10 h-10 rounded-xl bg-royal-600/20 flex items-center justify-center">
-                    <stat.icon className="w-5 h-5 text-royal-400" />
+                    <stat.icon className="w-5 h-5 text-crimson-400" />
                   </div>
                   {stat.change && (
                     <div className={`flex items-center gap-1 text-sm ${stat.up ? 'text-green-400' : 'text-red-400'}`}>

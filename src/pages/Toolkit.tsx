@@ -115,7 +115,7 @@ export default function Toolkit() {
                     transition={{ delay: 0.4 + i * 0.1 }}
                   >
                     <div className="w-10 h-10 rounded-lg bg-royal-600/20 flex items-center justify-center">
-                      <item.icon className="w-5 h-5 text-royal-400" />
+                      <item.icon className="w-5 h-5 text-crimson-400" />
                     </div>
                     <div className="flex-1">
                       <p className="text-white font-medium">{item.label}</p>
@@ -141,7 +141,7 @@ export default function Toolkit() {
               <TiltCard>
                 <div className="glass-card rounded-xl p-6 flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-royal-600/20 flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-royal-400" />
+                    <FileText className="w-6 h-6 text-crimson-400" />
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-white">{form.name}</h3>

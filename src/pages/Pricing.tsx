@@ -64,7 +64,7 @@ export default function Pricing() {
                       'Priority support',
                     ].map((feature, i) => (
                       <div key={i} className="flex items-center gap-3">
-                        <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                        <CheckCircle className="w-5 h-5 text-crimson-400 flex-shrink-0" />
                         <span className="text-white/80">{feature}</span>
                       </div>
                     ))}
@@ -107,7 +107,7 @@ export default function Pricing() {
               <StaggerItem key={i}>
                 <div className="glass-card rounded-2xl p-8 text-center">
                   <div className="w-14 h-14 rounded-xl bg-royal-600/20 flex items-center justify-center mx-auto mb-4">
-                    <item.icon className="w-7 h-7 text-royal-400" />
+                    <item.icon className="w-7 h-7 text-crimson-400" />
                   </div>
                   <div className="text-3xl font-bold text-gold-400 mb-2">{item.stat}</div>
                   <p className="text-sm text-white/50">{item.label}</p>

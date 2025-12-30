@@ -119,9 +119,9 @@ export default function Checklist() {
                     catCompleted === category.items.length ? 'bg-green-500/20' : 'bg-royal-600/20'
                   }`}>
                     {catCompleted === category.items.length ? (
-                      <CheckCircle className="w-5 h-5 text-green-400" />
+                      <CheckCircle className="w-5 h-5 text-crimson-400" />
                     ) : (
-                      <AlertCircle className="w-5 h-5 text-royal-400" />
+                      <AlertCircle className="w-5 h-5 text-crimson-400" />
                     )}
                   </div>
                   <div className="flex-1">
@@ -145,7 +145,7 @@ export default function Checklist() {
                           onClick={() => toggleItem(category.id, item.id)}
                         >
                           {item.completed ? (
-                            <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
+                            <CheckCircle className="w-5 h-5 text-crimson-400 mt-0.5 flex-shrink-0" />
                           ) : (
                             <Circle className="w-5 h-5 text-white/30 mt-0.5 flex-shrink-0" />
                           )}
