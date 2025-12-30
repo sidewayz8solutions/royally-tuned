@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Crown, Mail, Lock, ArrowRight, Loader2, CheckCircle } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader2, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
 export default function CreateAccount() {
@@ -148,6 +148,16 @@ export default function CreateAccount() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-white/70 mb-2">Email</label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+                <input
+                  type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-white/30 focus:outline-none focus:border-royal-500"
+                />
+              </div>
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-white/70 mb-2">Password</label>
@@ -185,14 +195,3 @@ export default function CreateAccount() {
     </div>
   );
 }
-            <div>
-              <label className="block text-sm font-medium text-white/70 mb-2">Email</label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
-                <input
-                  type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder-white/30 focus:outline-none focus:border-royal-500"
-                />
-              </div>
-            </div>
-

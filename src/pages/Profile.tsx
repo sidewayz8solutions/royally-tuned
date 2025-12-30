@@ -149,8 +149,8 @@ export default function Profile() {
               <h2 className="text-xl font-semibold text-white mb-6">Artist Information</h2>
               <p className="text-sm text-white/50 mb-6">This information is used to auto-fill royalty registration forms.</p>
 
-            <div className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm text-white/70 mb-2">Artist / Stage Name</label>
                   <div className="relative">
@@ -276,14 +276,14 @@ export default function Profile() {
                   ))}
                 </div>
               </div>
+              </div>
 
               <button onClick={handleSave} className="btn-primary flex items-center gap-2 w-full justify-center py-4">
                 {saved ? <CheckCircle className="w-5 h-5" /> : <Save className="w-5 h-5" />}
                 {saved ? 'Saved!' : 'Save Changes'}
               </button>
             </div>
-          </div>
-        </FadeInOnScroll>
+          </FadeInOnScroll>
 
         {/* Sidebar */}
         <FadeInOnScroll delay={0.2}>
@@ -324,6 +324,7 @@ export default function Profile() {
             </button>
           </div>
         </FadeInOnScroll>
+        </div>
       </div>
     </div>
   );
