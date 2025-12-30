@@ -29,12 +29,13 @@ export default function RequireAuth({ children }: RequireAuthProps) {
     return <Navigate to="/signup" replace />;
   }
 
-  // No active subscription - redirect to pricing
-  // We currently store subscription as a tier/status (e.g. 'free', 'pro', 'cancelled', ...)
-  // Treat 'pro' as paid access.
-  if (subscriptionStatus !== 'pro') {
-    return <Navigate to="/pricing" replace />;
-  }
+	  // No active subscription - redirect to pricing
+	  // Supabase app_metadata.subscription_status mirrors Stripe status (e.g. 'trialing', 'active', 'canceled').
+	  // Treat active/trialing (and legacy 'pro') as paid access.
+	  const isPaid = subscriptionStatus === 'pro' || subscriptionStatus === 'active' || subscriptionStatus === 'trialing';
+	  if (!isPaid) {
+	    return <Navigate to="/pricing" replace />;
+	  }
 
   return <>{children}</>;
 }
