@@ -30,7 +30,9 @@ export default function RequireAuth({ children }: RequireAuthProps) {
   }
 
   // No active subscription - redirect to pricing
-  if (subscriptionStatus !== 'active') {
+  // We currently store subscription as a tier/status (e.g. 'free', 'pro', 'cancelled', ...)
+  // Treat 'pro' as paid access.
+  if (subscriptionStatus !== 'pro') {
     return <Navigate to="/pricing" replace />;
   }
 

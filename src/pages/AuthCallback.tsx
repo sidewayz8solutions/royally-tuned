@@ -32,8 +32,8 @@ export default function AuthCallback() {
             // Existing subscriber → take them straight into the app
             navigate('/app', { replace: true });
           } else {
-            // New or non-subscribed user → send to pricing and immediately start checkout
-            navigate('/pricing?checkout=start', { replace: true });
+            // New or non-subscribed user → send to pricing (user clicks Pay)
+            navigate('/pricing', { replace: true });
           }
         } else {
           // No session found - might still be processing
@@ -46,7 +46,7 @@ export default function AuthCallback() {
               setTimeout(() => navigate('/signup', { replace: true }), 3000);
             } else {
               const status = retryData.session.user?.app_metadata?.subscription_status;
-              navigate(status === 'active' ? '/app' : '/pricing?checkout=start', { replace: true });
+              navigate(status === 'active' ? '/app' : '/pricing', { replace: true });
             }
           }, 1000);
         }
