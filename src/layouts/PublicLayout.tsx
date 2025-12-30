@@ -8,6 +8,7 @@ export default function PublicLayout() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] mesh-bg">
+      <div className="logo-watermark" />
       <PublicNav />
       
       <motion.main

@@ -8,6 +8,7 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
+      <div className="logo-watermark" />
       <AppNav />
       
       <motion.main

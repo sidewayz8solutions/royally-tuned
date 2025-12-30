@@ -43,3 +43,4 @@ coverage/
 # Fetch client data (local API testing)
 fetch-client/
 
+.vercel

@@ -23,6 +23,25 @@
   box-sizing: border-box;
 }
 
+/* Logo Watermark Background */
+.logo-watermark {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80vw;
+  height: 80vh;
+  max-width: 800px;
+  max-height: 800px;
+  background-image: url('/logo2.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 0;
+}
+
 body {
   font-family: 'Inter', system-ui, sans-serif;
   background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 50%, #0d0d0d 100%);
