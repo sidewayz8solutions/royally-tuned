@@ -17,39 +17,70 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const [user, setUser] = useState<User | null>(null);
 	const [loading, setLoading] = useState(true);
+	const [dbSubscriptionStatus, setDbSubscriptionStatus] = useState<string | null>(null);
+
+	// Fetch subscription status from profiles table (source of truth)
+	const fetchSubscriptionFromDB = useCallback(async (userId: string) => {
+		if (!supabase) return null;
+		const { data } = await supabase
+			.from('profiles')
+			.select('subscription_status')
+			.eq('id', userId)
+			.single();
+		return data?.subscription_status || null;
+	}, []);
 
 	const refreshUser = useCallback(async () => {
-		if (!supabase) return;
-		// Force refresh the session from server to get updated app_metadata (including subscription_status)
-		const { data, error } = await supabase.auth.refreshSession();
-		if (!error && data.user) {
+		if (!supabase || !user) return;
+		// Fetch fresh subscription status from database
+		const status = await fetchSubscriptionFromDB(user.id);
+		if (status) {
+			setDbSubscriptionStatus(status);
+		}
+		// Also try to refresh the session
+		const { data } = await supabase.auth.refreshSession();
+		if (data.user) {
 			setUser(data.user);
 		}
-	}, []);
+	}, [user, fetchSubscriptionFromDB]);
 
 	useEffect(() => {
 		if (!supabase) {
-			// eslint-disable-next-line react-hooks/set-state-in-effect
 			setLoading(false);
 			return;
 		}
 		const init = async () => {
 			const { data } = await supabase!.auth.getUser();
 			setUser(data.user ?? null);
+			// Also fetch DB subscription status
+			if (data.user) {
+				const status = await fetchSubscriptionFromDB(data.user.id);
+				setDbSubscriptionStatus(status);
+			}
 			setLoading(false);
 		};
 		init();
 
-		const { data: sub } = supabase!.auth.onAuthStateChange((_, session) => {
+		const { data: sub } = supabase!.auth.onAuthStateChange(async (_, session) => {
 			setUser(session?.user ?? null);
+			if (session?.user) {
+				const status = await fetchSubscriptionFromDB(session.user.id);
+				setDbSubscriptionStatus(status);
+			} else {
+				setDbSubscriptionStatus(null);
+			}
 		});
 		return () => sub.subscription?.unsubscribe();
-	}, []);
+	}, [fetchSubscriptionFromDB]);
 
+	// Combine app_metadata status with DB status - DB takes priority
 	const subscriptionStatus = useMemo(() => {
+		// First check DB status (most up-to-date)
+		if (dbSubscriptionStatus) return dbSubscriptionStatus;
+		// Fallback to app_metadata
 		const meta = (user?.app_metadata || {}) as Record<string, unknown>;
 		return (meta['subscription_status'] as string) || null;
-	}, [user]);
+	}, [user, dbSubscriptionStatus]);
 
 	// Standard email + password sign-up.
 	// Note: if your Supabase project requires email confirmation,

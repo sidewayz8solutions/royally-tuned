@@ -1,18 +1,46 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
+import { useEffect } from 'react';
 
 interface RequireAuthProps {
   children: React.ReactNode;
 }
 
+// Key for localStorage to track recent payment
+const JUST_PAID_KEY = 'royally_tuned_just_paid';
+const JUST_PAID_EXPIRY = 60000; // 60 seconds grace period after payment
+
 export default function RequireAuth({ children }: RequireAuthProps) {
   const { user, loading, subscriptionStatus } = useAuth();
   const location = useLocation();
 
-  // Check if user just completed checkout - allow them through while we refresh their data
+  // Check if user just completed checkout from URL
   const searchParams = new URLSearchParams(location.search);
-  const justPaid = searchParams.get('checkout') === 'success';
+  const checkoutSuccess = searchParams.get('checkout') === 'success';
+
+  // Store checkout success in localStorage for persistence across page navigations
+  useEffect(() => {
+    if (checkoutSuccess) {
+      localStorage.setItem(JUST_PAID_KEY, Date.now().toString());
+    }
+  }, [checkoutSuccess]);
+
+  // Check if user recently paid (within grace period)
+  const justPaid = (() => {
+    if (checkoutSuccess) return true;
+    const stored = localStorage.getItem(JUST_PAID_KEY);
+    if (stored) {
+      const timestamp = parseInt(stored, 10);
+      if (Date.now() - timestamp < JUST_PAID_EXPIRY) {
+        return true;
+      } else {
+        // Expired, clean up
+        localStorage.removeItem(JUST_PAID_KEY);
+      }
+    }
+    return false;
+  })();
 
   if (loading) {
     return (
@@ -35,10 +63,14 @@ export default function RequireAuth({ children }: RequireAuthProps) {
   }
 
   // No active subscription - redirect to pricing
-  // Supabase app_metadata.subscription_status mirrors Stripe status (e.g. 'trialing', 'active', 'canceled').
-  // Treat active/trialing (and legacy 'pro') as paid access.
-  // Also allow through if ?checkout=success - Dashboard will refresh user data
+  // Also allow through if user just paid (grace period while webhook processes)
   const isPaid = subscriptionStatus === 'pro' || subscriptionStatus === 'active' || subscriptionStatus === 'trialing';
+  
+  // If subscription is now valid, clear the justPaid flag
+  if (isPaid) {
+    localStorage.removeItem(JUST_PAID_KEY);
+  }
+  
   if (!isPaid && !justPaid) {
     return <Navigate to="/pricing" replace />;
   }

@@ -1,16 +1,28 @@
 import Stripe from 'stripe';
 import { supabaseAdmin } from './_supabaseAdmin.js';
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, { apiVersion: '2025-12-15.clover' });
 
 async function updateUser(userId: string, fields: Record<string, unknown>) {
+  // Update auth.users app_metadata
   await supabaseAdmin.auth.admin.updateUserById(userId, {
     app_metadata: { ...(fields || {}) },
   });
+  
+  // Also update profiles table for immediate access
+  const profileFields: Record<string, unknown> = {};
+  if (fields.stripe_customer_id) profileFields.stripe_customer_id = fields.stripe_customer_id;
+  if (fields.subscription_status) profileFields.subscription_status = fields.subscription_status;
+  
+  if (Object.keys(profileFields).length > 0) {
+    await supabaseAdmin
+      .from('profiles')
+      .update(profileFields)
+      .eq('id', userId);
+  }
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
   const sig = req.headers['stripe-signature'] as string | undefined;
@@ -29,7 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   } catch (err) {
     console.error('Webhook signature verification failed.', err);
-    return res.status(400).send(`Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    return res.status(400).send(`Webhook Error: ${(err as any).message}`);
   }
 
   try {
@@ -39,8 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const userId = (session.client_reference_id as string) || (session.metadata?.supabase_user_id as string);
         const customerId = (session.customer as string) || undefined;
         if (userId) {
-          // Set subscription_status to 'active' on checkout completion as a fallback
-          // This ensures users get access even if subscription events are delayed
+          // Set subscription_status to 'active' immediately on checkout completion
           await updateUser(userId, {
             stripe_customer_id: customerId,
             subscription_status: 'active',
@@ -53,20 +64,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       case 'customer.subscription.deleted': {
         const sub = event.data.object as Stripe.Subscription;
         const customerId = sub.customer as string;
-        // Try to get userId from subscription metadata, or look it up from customer
-        let userId = (sub.metadata?.supabase_user_id as string) || undefined;
-        
-        // If no userId in subscription metadata, try to find user by customer ID
-        if (!userId && customerId) {
-          const { data: users } = await supabaseAdmin.auth.admin.listUsers();
-          const matchingUser = users?.users?.find(
-            u => (u.app_metadata as Record<string, unknown>)?.stripe_customer_id === customerId
-          );
-          if (matchingUser) {
-            userId = matchingUser.id;
-          }
-        }
-        
+        const userId = (sub.metadata?.supabase_user_id as string) || undefined;
         const status = sub.status; // 'active' | 'trialing' | 'canceled' | ...
         if (userId) {
           await updateUser(userId, {
