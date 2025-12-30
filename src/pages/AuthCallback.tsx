@@ -36,6 +36,7 @@ export default function AuthCallback() {
           // No session found - might still be processing
           // Wait a moment and check again
           setTimeout(async () => {
+            if (!supabase) return;
             const { data: retryData, error: retryError } = await supabase.auth.getSession();
             if (retryError || !retryData.session) {
               setError('Unable to verify your email. Please try signing in again.');
