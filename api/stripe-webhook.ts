@@ -3,22 +3,47 @@ import { supabaseAdmin } from './_supabaseAdmin.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, { apiVersion: '2025-12-15.clover' });
 
+// Map Stripe subscription status to our DB enum values
+// DB ENUM: 'free', 'pro', 'enterprise', 'cancelled', 'past_due'
+function mapStripeStatusToDbStatus(stripeStatus: string): string {
+  switch (stripeStatus) {
+    case 'active':
+    case 'trialing':
+      return 'pro';
+    case 'canceled':
+    case 'unpaid':
+    case 'incomplete_expired':
+      return 'cancelled';
+    case 'past_due':
+    case 'incomplete':
+      return 'past_due';
+    default:
+      return 'pro'; // Default to pro for any active-like status
+  }
+}
+
 async function updateUser(userId: string, fields: Record<string, unknown>) {
-  // Update auth.users app_metadata
+  // Update auth.users app_metadata (can store any string)
   await supabaseAdmin.auth.admin.updateUserById(userId, {
     app_metadata: { ...(fields || {}) },
   });
   
-  // Also update profiles table for immediate access
+  // Also update profiles table - must use valid ENUM value
   const profileFields: Record<string, unknown> = {};
   if (fields.stripe_customer_id) profileFields.stripe_customer_id = fields.stripe_customer_id;
-  if (fields.subscription_status) profileFields.subscription_status = fields.subscription_status;
+  if (fields.subscription_status) {
+    // Map to valid DB enum value
+    profileFields.subscription_status = mapStripeStatusToDbStatus(fields.subscription_status as string);
+  }
   
   if (Object.keys(profileFields).length > 0) {
-    await supabaseAdmin
+    const { error } = await supabaseAdmin
       .from('profiles')
       .update(profileFields)
       .eq('id', userId);
+    if (error) {
+      console.error('Failed to update profiles table:', error);
+    }
   }
 }
 

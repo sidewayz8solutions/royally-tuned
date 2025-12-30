@@ -22,12 +22,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	// Fetch subscription status from profiles table (source of truth)
 	const fetchSubscriptionFromDB = useCallback(async (userId: string) => {
 		if (!supabase) return null;
-		const { data } = await supabase
-			.from('profiles')
-			.select('subscription_status')
-			.eq('id', userId)
-			.single();
-		return data?.subscription_status || null;
+		try {
+			const { data, error } = await supabase
+				.from('profiles')
+				.select('subscription_status')
+				.eq('id', userId)
+				.single();
+			if (error) {
+				console.warn('Could not fetch subscription from profiles:', error.message);
+				return null;
+			}
+			return data?.subscription_status || null;
+		} catch (e) {
+			console.warn('Failed to fetch subscription:', e);
+			return null;
+		}
 	}, []);
 
 	const refreshUser = useCallback(async () => {
@@ -52,10 +61,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		const init = async () => {
 			const { data } = await supabase!.auth.getUser();
 			setUser(data.user ?? null);
-			// Also fetch DB subscription status
+			// Also fetch DB subscription status (don't block on failure)
 			if (data.user) {
-				const status = await fetchSubscriptionFromDB(data.user.id);
-				setDbSubscriptionStatus(status);
+				fetchSubscriptionFromDB(data.user.id).then(status => {
+					if (status) setDbSubscriptionStatus(status);
+				});
 			}
 			setLoading(false);
 		};
@@ -65,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			setUser(session?.user ?? null);
 			if (session?.user) {
 				const status = await fetchSubscriptionFromDB(session.user.id);
-				setDbSubscriptionStatus(status);
+				if (status) setDbSubscriptionStatus(status);
 			} else {
 				setDbSubscriptionStatus(null);
 			}
