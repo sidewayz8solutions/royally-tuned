@@ -203,8 +203,8 @@ export default function Home() {
                   <div className="absolute top-3 right-3">
                     <Lock className="w-4 h-4 text-gold-500" />
                   </div>
-                  <div className="w-12 h-12 rounded-xl bg-royal-600/20 flex items-center justify-center mb-4">
-                    <item.icon className="w-6 h-6 text-royal-400" />
+                  <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center mb-4">
+                    <item.icon className="w-6 h-6 text-red-400" />
                   </div>
                   <h3 className="text-lg font-semibold text-white mb-2">{item.title}</h3>
                   <p className="text-sm text-white/50">{item.desc}</p>
