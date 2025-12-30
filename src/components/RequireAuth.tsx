@@ -7,9 +7,10 @@ interface RequireAuthProps {
   children: React.ReactNode;
 }
 
-// Key for localStorage to track recent payment
+// Keys for localStorage to track payment state
 const JUST_PAID_KEY = 'royally_tuned_just_paid';
-const JUST_PAID_EXPIRY = 60000; // 60 seconds grace period after payment
+const LAST_KNOWN_PAID_KEY = 'royally_tuned_last_known_paid';
+const JUST_PAID_EXPIRY = 5 * 60 * 1000; // 5 minutes grace period after payment/webhook delay
 
 export default function RequireAuth({ children }: RequireAuthProps) {
   const { user, loading, subscriptionStatus } = useAuth();
@@ -42,6 +43,17 @@ export default function RequireAuth({ children }: RequireAuthProps) {
     return false;
   })();
 
+  // Normalize paid statuses
+  const paidStatuses = new Set(['pro', 'active', 'trialing', 'enterprise']);
+  const isPaid = subscriptionStatus ? paidStatuses.has(subscriptionStatus) : false;
+
+  // Persist last known paid to survive transient auth jitter
+  if (isPaid) {
+    localStorage.setItem(LAST_KNOWN_PAID_KEY, 'true');
+    localStorage.removeItem(JUST_PAID_KEY);
+  }
+  const lastKnownPaid = localStorage.getItem(LAST_KNOWN_PAID_KEY) === 'true';
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
@@ -62,16 +74,8 @@ export default function RequireAuth({ children }: RequireAuthProps) {
     return <Navigate to="/signup" replace />;
   }
 
-  // No active subscription - redirect to pricing
-  // Also allow through if user just paid (grace period while webhook processes)
-  const isPaid = subscriptionStatus === 'pro' || subscriptionStatus === 'active' || subscriptionStatus === 'trialing';
-  
-  // If subscription is now valid, clear the justPaid flag
-  if (isPaid) {
-    localStorage.removeItem(JUST_PAID_KEY);
-  }
-  
-  if (!isPaid && !justPaid) {
+  // No active subscription - redirect to pricing unless just paid or cached paid
+  if (!isPaid && !justPaid && !lastKnownPaid) {
     return <Navigate to="/pricing" replace />;
   }
 
