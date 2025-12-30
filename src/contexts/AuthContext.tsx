@@ -3,11 +3,12 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 
 interface AuthContextValue {
-  user: User | null;
-  loading: boolean;
-  subscriptionStatus: string | null;
-  signInWithEmail: (email: string) => Promise<{ error?: string; ok: boolean }>;
-  signOut: () => Promise<void>;
+	user: User | null;
+	loading: boolean;
+	subscriptionStatus: string | null;
+	signUp: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+	signIn: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+	signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -34,37 +35,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => sub.subscription?.unsubscribe();
   }, []);
 
-  const subscriptionStatus = useMemo(() => {
-    const meta = (user?.app_metadata || {}) as Record<string, unknown>;
-    return (meta['subscription_status'] as string) || null;
-  }, [user]);
+	const subscriptionStatus = useMemo(() => {
+		const meta = (user?.app_metadata || {}) as Record<string, unknown>;
+		return (meta['subscription_status'] as string) || null;
+	}, [user]);
 
-  const signInWithEmail = async (email: string) => {
-    try {
-      if (!supabase) return { ok: false, error: 'Auth not configured' };
+	// Standard email + password sign-up
+	const signUp = async (email: string, password: string) => {
+		try {
+			if (!supabase) return { ok: false, error: 'Auth not configured' };
 
-      // Build the redirect URL for the auth callback
-      const redirectUrl = `${window.location.origin}/auth/callback`;
+			const { error } = await supabase.auth.signUp({
+				email,
+				password,
+			});
+			if (error) return { ok: false, error: error.message };
+			return { ok: true };
+		} catch (e) {
+			return { ok: false, error: e instanceof Error ? e.message : 'Unknown error' };
+		}
+	};
 
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: redirectUrl,
-        }
-      });
-      if (error) return { ok: false, error: error.message };
-      return { ok: true };
-    } catch (e) {
-      return { ok: false, error: e instanceof Error ? e.message : 'Unknown error' };
-    }
-  };
+	// Standard email + password login
+	const signIn = async (email: string, password: string) => {
+		try {
+			if (!supabase) return { ok: false, error: 'Auth not configured' };
 
-  const signOut = async () => {
-    if (!supabase) return;
-    await supabase.auth.signOut();
-  };
+			const { error } = await supabase.auth.signInWithPassword({
+				email,
+				password,
+			});
+			if (error) return { ok: false, error: error.message };
+			return { ok: true };
+		} catch (e) {
+			return { ok: false, error: e instanceof Error ? e.message : 'Unknown error' };
+		}
+	};
 
-  const value: AuthContextValue = { user, loading, subscriptionStatus, signInWithEmail, signOut };
+	const signOut = async () => {
+		if (!supabase) return;
+		await supabase.auth.signOut();
+	};
+
+	const value: AuthContextValue = { user, loading, subscriptionStatus, signUp, signIn, signOut };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
