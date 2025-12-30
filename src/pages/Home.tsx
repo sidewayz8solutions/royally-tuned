@@ -108,8 +108,8 @@ export default function Home() {
               <StaggerItem key={i}>
                 <TiltCard>
                   <div className="glass-card rounded-2xl p-8 h-full">
-                    <div className="w-14 h-14 rounded-xl bg-crimson-600/20 flex items-center justify-center mb-6">
-                      <item.icon className="w-7 h-7 text-crimson-400" />
+                    <div className="w-14 h-14 rounded-xl bg-red-500/20 flex items-center justify-center mb-6">
+                      <item.icon className="w-7 h-7 text-red-400" />
                     </div>
                     <h3 className="text-xl font-semibold text-white mb-3">{item.title}</h3>
                     <p className="text-white/50">{item.desc}</p>
