@@ -14,26 +14,27 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+	const [user, setUser] = useState<User | null>(null);
+	const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
-    const init = async () => {
-      const { data } = await supabase!.auth.getUser();
-      setUser(data.user ?? null);
-      setLoading(false);
-    };
-    init();
+	useEffect(() => {
+		if (!supabase) {
+			// eslint-disable-next-line react-hooks/set-state-in-effect
+			setLoading(false);
+			return;
+		}
+		const init = async () => {
+			const { data } = await supabase!.auth.getUser();
+			setUser(data.user ?? null);
+			setLoading(false);
+		};
+		init();
 
-    const { data: sub } = supabase!.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null);
-    });
-    return () => sub.subscription?.unsubscribe();
-  }, []);
+		const { data: sub } = supabase!.auth.onAuthStateChange((_, session) => {
+			setUser(session?.user ?? null);
+		});
+		return () => sub.subscription?.unsubscribe();
+	}, []);
 
 	const subscriptionStatus = useMemo(() => {
 		const meta = (user?.app_metadata || {}) as Record<string, unknown>;
@@ -80,12 +81,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	};
 
 	const value: AuthContextValue = { user, loading, subscriptionStatus, signUp, signIn, signOut };
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-  return ctx;
+	const ctx = useContext(AuthContext);
+	if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+	return ctx;
 }
 
