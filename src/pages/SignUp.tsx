@@ -37,7 +37,7 @@ export default function SignUp() {
 		if (result.ok) {
 			if (mode === 'signup') {
 				// New account created – send them to pricing to start checkout
-				navigate('/pricing', { replace: true });
+				navigate('/pricing?checkout=start', { replace: true });
 			} else {
 				// Logged in – send toward the app, RequireAuth will gate by subscription
 				navigate('/app', { replace: true });

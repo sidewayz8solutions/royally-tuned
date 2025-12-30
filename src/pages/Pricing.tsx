@@ -3,11 +3,14 @@ import { motion } from 'framer-motion';
 import { Crown, CheckCircle, ArrowRight, Zap, Shield, BarChart3 } from 'lucide-react';
 import { FadeInOnScroll, TiltCard, StaggerContainer, StaggerItem } from '../components/animations';
 import { useAuth } from '../contexts/AuthContext';
+import { useSearchParams } from 'react-router-dom';
 
 export default function Pricing() {
 	const { user, subscriptionStatus, loading: authLoading } = useAuth();
 	const [checkoutLoading, setCheckoutLoading] = useState(false);
 	const [error, setError] = useState('');
+	const [searchParams] = useSearchParams();
+	const shouldAutoCheckout = searchParams.get('checkout') === 'start';
 
 	const startCheckout = async () => {
 		// If somehow we don't have a user yet, send them to signup first
@@ -38,16 +41,16 @@ export default function Pricing() {
 		}
 	};
 
-	// As soon as a logged-in, non-subscribed user lands on Pricing,
-	// automatically kick off Stripe Checkout.
+	// Only auto-checkout if explicitly requested via URL param
 	useEffect(() => {
 		if (authLoading) return;
 		if (!user) return;
 		if (subscriptionStatus === 'active') return;
+		if (!shouldAutoCheckout) return;
 
 		startCheckout();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [authLoading, user, subscriptionStatus]);
+	}, [authLoading, user, subscriptionStatus, shouldAutoCheckout]);
 
   return (
     <div className="overflow-hidden">
