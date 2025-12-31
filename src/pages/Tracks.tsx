@@ -32,6 +32,7 @@ export default function Tracks() {
   // Fetch tracks from Supabase
   useEffect(() => {
     if (!user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(false);
       return;
     }

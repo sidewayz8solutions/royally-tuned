@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface RequireAuthProps {
   children: React.ReactNode;
@@ -15,6 +15,7 @@ const JUST_PAID_EXPIRY = 5 * 60 * 1000; // 5 minutes grace period after payment/
 export default function RequireAuth({ children }: RequireAuthProps) {
   const { user, loading, subscriptionStatus } = useAuth();
   const location = useLocation();
+  const [justPaid, setJustPaid] = useState(false);
 
   // Check if user just completed checkout from URL
   const searchParams = new URLSearchParams(location.search);
@@ -28,20 +29,26 @@ export default function RequireAuth({ children }: RequireAuthProps) {
   }, [checkoutSuccess]);
 
   // Check if user recently paid (within grace period)
-  const justPaid = (() => {
-    if (checkoutSuccess) return true;
+  useEffect(() => {
+    if (checkoutSuccess) {
+      setJustPaid(true);
+      return;
+    }
+    
     const stored = localStorage.getItem(JUST_PAID_KEY);
     if (stored) {
       const timestamp = parseInt(stored, 10);
       if (Date.now() - timestamp < JUST_PAID_EXPIRY) {
-        return true;
+        setJustPaid(true);
       } else {
         // Expired, clean up
         localStorage.removeItem(JUST_PAID_KEY);
+        setJustPaid(false);
       }
+    } else {
+      setJustPaid(false);
     }
-    return false;
-  })();
+  }, [checkoutSuccess]);
 
   // Normalize paid statuses
   const paidStatuses = new Set(['pro', 'active', 'trialing', 'enterprise']);

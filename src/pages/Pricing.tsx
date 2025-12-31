@@ -4,6 +4,11 @@ import { Crown, CheckCircle, ArrowRight, Zap, Shield, BarChart3 } from 'lucide-r
 import { FadeInOnScroll, TiltCard, StaggerContainer, StaggerItem } from '../components/animations';
 import { useAuth } from '../contexts/AuthContext';
 
+interface CheckoutResponse {
+  url?: string;
+  error?: string;
+}
+
 export default function Pricing() {
   const { user, loading: authLoading } = useAuth();
 	const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -19,20 +24,35 @@ export default function Pricing() {
 		try {
 			setError('');
 			setCheckoutLoading(true);
-			const res = await fetch('/api/create-checkout-session', {
+      const res = await fetch('/api/create-checkout-session', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ userId: user.id }),
 			});
 
-			const data = await res.json();
-			if (data?.url) {
-				window.location.href = data.url;
-			} else {
-				setError(data?.error || 'Unable to start checkout. Please try again.');
-			}
-		} catch {
-			setError('Unable to start checkout. Please try again.');
+      let data: CheckoutResponse | null = null;
+      try {
+        data = await res.json();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (e) {
+        // ignore
+      }
+
+      if (!res.ok) {
+        const message = data?.error || `Checkout failed (${res.status}). Check PRICE_ID_PRO and Stripe keys.`;
+        console.error('Checkout session error', { status: res.status, body: data });
+        setError(message);
+        return;
+      }
+
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        setError(data?.error || 'Unable to start checkout. Please try again.');
+      }
+    } catch (e) {
+      console.error('Checkout fetch failed', e);
+      setError('Unable to start checkout. Please try again.');
 		} finally {
 			setCheckoutLoading(false);
 		}
