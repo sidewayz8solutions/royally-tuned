@@ -31,6 +31,7 @@ export default function RequireAuth({ children }: RequireAuthProps) {
   // Check if user recently paid (within grace period)
   useEffect(() => {
     if (checkoutSuccess) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setJustPaid(true);
       return;
     }
