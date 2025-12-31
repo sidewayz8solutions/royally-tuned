@@ -64,6 +64,8 @@ export default function Checklist() {
     const fetchChecklist = async () => {
       setLoading(true);
       const client = supabase!;
+      // eslint-disable-next-line no-console
+      console.debug('[Checklist] fetching items for user', user.id);
       const { data, error } = await client
         .from('checklist_items')
         .select('*')
@@ -72,6 +74,8 @@ export default function Checklist() {
 
       if (!error && data && data.length > 0) {
         setItems(data);
+        // eslint-disable-next-line no-console
+        console.debug('[Checklist] loaded existing items:', data.length);
       } else if (!error && (!data || data.length === 0)) {
         // Create default checklist for new user
         const newItems = defaultItems.map(item => ({
@@ -86,6 +90,8 @@ export default function Checklist() {
         
         if (inserted) {
           setItems(inserted);
+          // eslint-disable-next-line no-console
+          console.debug('[Checklist] seeded default items:', inserted.length);
         }
       }
       setLoading(false);
@@ -121,7 +127,7 @@ export default function Checklist() {
   // Group items by category
   const categories: ChecklistCategory[] = defaultCategories.map(cat => ({
     ...cat,
-    items: items.filter(item => item.category === cat.id),
+    items: (items || []).filter(item => item.category === cat.id),
   }));
 
   const totalItems = items.length;

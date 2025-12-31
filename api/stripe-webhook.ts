@@ -24,9 +24,20 @@ function mapStripeStatusToDbStatus(stripeStatus: string): string {
 
 async function updateUser(userId: string, fields: Record<string, unknown>) {
   // Update auth.users app_metadata (can store any string)
-  await supabaseAdmin.auth.admin.updateUserById(userId, {
-    app_metadata: { ...(fields || {}) },
-  });
+  // Preserve existing app_metadata instead of overwriting it entirely.
+  try {
+    const { data: existingUser, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
+    if (userError || !existingUser?.user) {
+      console.error('stripe-webhook: failed to fetch user before updateUser', userError);
+    } else {
+      const currentMeta = (existingUser.user.app_metadata || {}) as Record<string, unknown>;
+      await supabaseAdmin.auth.admin.updateUserById(userId, {
+        app_metadata: { ...currentMeta, ...(fields || {}) },
+      });
+    }
+  } catch (e) {
+    console.error('stripe-webhook: error updating auth app_metadata', e);
+  }
   
   // Also update profiles table - must use valid ENUM value
   const profileFields: Record<string, unknown> = { id: userId };

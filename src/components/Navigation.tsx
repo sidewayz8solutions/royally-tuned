@@ -5,12 +5,19 @@ import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { PUBLIC_NAV, PAID_NAV } from '../types';
 
+const BYPASS_SUBSCRIPTION_GUARD = import.meta.env.VITE_BYPASS_SUBSCRIPTION_GUARD === 'true';
+
 export function PublicNav() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { user, subscriptionStatus } = useAuth();
 
-  const isSubscribed = user && (subscriptionStatus === 'active' || subscriptionStatus === 'pro' || subscriptionStatus === 'trialing');
+  const isSubscribed = !!user && (
+    BYPASS_SUBSCRIPTION_GUARD ||
+    subscriptionStatus === 'active' ||
+    subscriptionStatus === 'pro' ||
+    subscriptionStatus === 'trialing'
+  );
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50">

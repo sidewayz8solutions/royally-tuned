@@ -44,6 +44,8 @@ export default function Tracks() {
     const fetchTracks = async () => {
       setLoading(true);
       const client = supabase!;
+      // eslint-disable-next-line no-console
+      console.debug('[Tracks] fetching tracks for user', user?.id);
       const { data, error } = await client
         .from('tracks')
         .select('*')
@@ -53,6 +55,8 @@ export default function Tracks() {
       
       if (!error && data) {
         setTracks(data);
+        // eslint-disable-next-line no-console
+        console.debug('[Tracks] fetched', data.length, 'tracks');
       }
       setLoading(false);
     };
@@ -61,7 +65,7 @@ export default function Tracks() {
   }, [user]);
 
   const filteredTracks = tracks.filter(track =>
-    track.title.toLowerCase().includes(searchQuery.toLowerCase())
+    (track.title || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Check if all registrations are complete

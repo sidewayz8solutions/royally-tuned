@@ -84,6 +84,8 @@ export default function Dashboard() {
       setLoading(true);
       try {
         const client = supabase!;
+        // eslint-disable-next-line no-console
+        console.debug('[Dashboard] fetching data for user', user?.id);
         // Fetch tracks
         const { data: tracksData } = await client
           .from('tracks')
@@ -110,6 +112,12 @@ export default function Dashboard() {
         setTracks(tracksData || []);
         setEarnings(earningsData || []);
         setNotifications(notificationsData || []);
+        // eslint-disable-next-line no-console
+        console.debug('[Dashboard] fetched', {
+          tracks: (tracksData || []).length,
+          earnings: (earningsData || []).length,
+          notifications: (notificationsData || []).length,
+        });
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err);
       } finally {
@@ -298,14 +306,16 @@ export default function Dashboard() {
 }
 
 function getTimeAgo(date: Date): string {
+  if (isNaN(date.getTime())) return '';
+  
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
   
-  if (diffMins < 60) return `${diffMins} min ago`;
-  if (diffHours < 24) return `${diffHours} hours ago`;
-  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffMins < 60) return `${Math.max(0, diffMins)} min ago`;
+  if (diffHours < 24) return `${Math.max(0, diffHours)} hours ago`;
+  if (diffDays < 7) return `${Math.max(0, diffDays)} days ago`;
   return date.toLocaleDateString();
 }
