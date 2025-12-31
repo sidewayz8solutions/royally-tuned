@@ -113,6 +113,16 @@ export function AppNav() {
           </Link>
 
           <div className="flex items-center gap-6">
+            <Link
+              to="/pricing"
+              className={`text-sm font-medium transition-colors ${
+                location.pathname === '/pricing'
+                  ? 'text-gold-400'
+                  : 'text-white/70 hover:text-white'
+              }`}
+            >
+              Pricing
+            </Link>
             {PAID_NAV.map((item) => (
               <Link
                 key={item.path}
