@@ -7,95 +7,73 @@ interface RequireAuthProps {
   children: React.ReactNode;
 }
 
-// Keys for localStorage to track payment state
+// Grace period key for just-paid users (webhook may be delayed)
 const JUST_PAID_KEY = 'royally_tuned_just_paid';
-const LAST_KNOWN_PAID_KEY = 'royally_tuned_last_known_paid';
-const JUST_PAID_EXPIRY = 5 * 60 * 1000; // 5 minutes grace period after payment/webhook delay
-
-// Optional env flag to bypass subscription gating for debugging.
-// Set VITE_BYPASS_SUBSCRIPTION_GUARD="true" to allow any logged-in user
-// through RequireAuth regardless of subscription status.
-const BYPASS_SUBSCRIPTION_GUARD = import.meta.env.VITE_BYPASS_SUBSCRIPTION_GUARD === 'true';
+const JUST_PAID_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
 
 export default function RequireAuth({ children }: RequireAuthProps) {
   const { user, loading, subscriptionStatus } = useAuth();
   const location = useLocation();
-  const [justPaid, setJustPaid] = useState(false);
   const [loadingTooLong, setLoadingTooLong] = useState(false);
 
   // Check if user just completed checkout from URL
   const searchParams = new URLSearchParams(location.search);
   const checkoutSuccess = searchParams.get('checkout') === 'success';
 
-  // Store checkout success in localStorage for persistence across page navigations
+  // Store checkout success timestamp for grace period
   useEffect(() => {
     if (checkoutSuccess) {
       localStorage.setItem(JUST_PAID_KEY, Date.now().toString());
     }
   }, [checkoutSuccess]);
 
-  // Safety: if loading exceeds 4s, surface a fallback UI so users aren't stuck on a spinner
+  // Safety timeout: if loading exceeds 5s, show fallback UI
   useEffect(() => {
     if (!loading) {
       setLoadingTooLong(false);
       return;
     }
-    const t = setTimeout(() => setLoadingTooLong(true), 4000);
+    const t = setTimeout(() => setLoadingTooLong(true), 5000);
     return () => clearTimeout(t);
   }, [loading]);
 
-  // Check if user recently paid (within grace period)
-  useEffect(() => {
-    if (checkoutSuccess) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setJustPaid(true);
-      return;
-    }
-    
+  // Check if within grace period (just paid but webhook may not have arrived)
+  const isWithinGracePeriod = (): boolean => {
     const stored = localStorage.getItem(JUST_PAID_KEY);
-    if (stored) {
-      const timestamp = parseInt(stored, 10);
-      if (Date.now() - timestamp < JUST_PAID_EXPIRY) {
-        setJustPaid(true);
-      } else {
-        // Expired, clean up
-        localStorage.removeItem(JUST_PAID_KEY);
-        setJustPaid(false);
-      }
-    } else {
-      setJustPaid(false);
+    if (!stored) return false;
+    const timestamp = parseInt(stored, 10);
+    if (isNaN(timestamp)) return false;
+    return Date.now() - timestamp < JUST_PAID_EXPIRY_MS;
+  };
+
+  // Determine if user has paid subscription
+  // Accept: 'pro', 'active', 'trialing', 'enterprise'
+  const PAID_STATUSES = ['pro', 'active', 'trialing', 'enterprise'];
+  const isPaid = subscriptionStatus ? PAID_STATUSES.includes(subscriptionStatus) : false;
+  const justPaid = checkoutSuccess || isWithinGracePeriod();
+
+  // Clear grace period once we have confirmed paid status
+  useEffect(() => {
+    if (isPaid) {
+      localStorage.removeItem(JUST_PAID_KEY);
     }
-  }, [checkoutSuccess]);
+  }, [isPaid]);
 
-  // Normalize paid statuses
-  const paidStatuses = new Set(['pro', 'active', 'trialing', 'enterprise']);
-  const isPaid = subscriptionStatus ? paidStatuses.has(subscriptionStatus) : false;
+  // Debug logging (only in dev)
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('[RequireAuth]', {
+        userId: user?.id,
+        subscriptionStatus,
+        isPaid,
+        justPaid,
+        loading,
+        path: location.pathname,
+      });
+    }
+  }, [user, subscriptionStatus, isPaid, justPaid, loading, location.pathname]);
 
-  // Expose auth/debug info globally and optionally log for troubleshooting.
-  if (typeof window !== 'undefined') {
-    const debugPayload = {
-      userId: user?.id ?? null,
-      subscriptionStatus,
-      isPaid,
-      bypassSubscription: BYPASS_SUBSCRIPTION_GUARD,
-      justPaid,
-      loading,
-      path: location.pathname + location.search,
-      lastKnownPaid: window.localStorage.getItem(LAST_KNOWN_PAID_KEY) === 'true',
-    };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-console
-    (window as any).__RT_AUTH_DEBUG__ = debugPayload;
-    // eslint-disable-next-line no-console
-    console.debug('[RequireAuth]', debugPayload);
-  }
-
-  // Persist last known paid to survive transient auth jitter
-  if (isPaid) {
-    localStorage.setItem(LAST_KNOWN_PAID_KEY, 'true');
-    localStorage.removeItem(JUST_PAID_KEY);
-  }
-  const lastKnownPaid = localStorage.getItem(LAST_KNOWN_PAID_KEY) === 'true';
-
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
@@ -105,31 +83,16 @@ export default function RequireAuth({ children }: RequireAuthProps) {
           animate={{ opacity: 1 }}
         >
           <div className="w-12 h-12 border-4 border-royal-600 border-t-transparent rounded-full animate-spin" />
-          <p className="text-white/60">Loading...</p>
+          <p className="text-white/60">Loading your account...</p>
           {loadingTooLong && (
             <div className="text-center text-white/60 text-sm space-y-3 max-w-sm">
-              <p>Auth is taking longer than expected.</p>
-              <div className="flex items-center gap-2 justify-center flex-wrap">
-                <button
-                  className="btn-primary px-4 py-2"
-                  onClick={() => {
-                    // Allow a manual retry of auth
-                    window.location.reload();
-                  }}
-                >
-                  Retry
-                </button>
-                <button
-                  className="bg-white/10 text-white px-4 py-2 rounded-xl border border-white/10"
-                  onClick={() => {
-                    // If they just paid or have last known paid, let them through
-                    localStorage.setItem(LAST_KNOWN_PAID_KEY, 'true');
-                    setLoadingTooLong(false);
-                  }}
-                >
-                  Continue anyway
-                </button>
-              </div>
+              <p>This is taking longer than expected.</p>
+              <button
+                className="btn-primary px-6 py-2"
+                onClick={() => window.location.reload()}
+              >
+                Retry
+              </button>
             </div>
           )}
         </motion.div>
@@ -137,32 +100,17 @@ export default function RequireAuth({ children }: RequireAuthProps) {
     );
   }
 
-  // Not logged in - redirect to signup
+  // Not logged in → go to login
   if (!user) {
-    return <Navigate to="/signup" replace />;
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  // No active subscription - redirect to pricing unless just paid or cached paid
-  // or we explicitly bypass the guard via env var (useful for debugging).
-  if (!BYPASS_SUBSCRIPTION_GUARD && !isPaid && !justPaid && !lastKnownPaid) {
+  // No active subscription and not in grace period → go to pricing
+  if (!isPaid && !justPaid) {
     return <Navigate to="/pricing" replace />;
   }
 
-  const showOverlay = typeof window !== 'undefined' && window.localStorage.getItem('rt_debug_overlay') === '1';
-
-  return (
-    <>
-      {showOverlay && (
-        <div className="fixed bottom-4 left-4 z-[9999] rounded bg-black/80 px-3 py-2 text-xs text-white/80">
-          <div className="font-semibold mb-1">Auth Debug</div>
-          <div>user: {user?.id ?? 'null'}</div>
-          <div>status: {subscriptionStatus ?? 'null'}</div>
-          <div>paid: {String(isPaid)} / lastKnownPaid: {String(lastKnownPaid)}</div>
-          <div>bypass: {String(BYPASS_SUBSCRIPTION_GUARD)} / justPaid: {String(justPaid)}</div>
-        </div>
-      )}
-      {children}
-    </>
-  );
+  // User is authenticated and has paid (or just paid) → render children
+  return <>{children}</>;
 }
 

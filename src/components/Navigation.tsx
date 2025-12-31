@@ -1,23 +1,19 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Home } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { PUBLIC_NAV, PAID_NAV } from '../types';
 
-const BYPASS_SUBSCRIPTION_GUARD = import.meta.env.VITE_BYPASS_SUBSCRIPTION_GUARD === 'true';
+// Paid statuses that grant access
+const PAID_STATUSES = ['pro', 'active', 'trialing', 'enterprise'];
 
 export function PublicNav() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const { user, subscriptionStatus } = useAuth();
+  const { user, subscriptionStatus, signOut } = useAuth();
 
-  const isSubscribed = !!user && (
-    BYPASS_SUBSCRIPTION_GUARD ||
-    subscriptionStatus === 'active' ||
-    subscriptionStatus === 'pro' ||
-    subscriptionStatus === 'trialing'
-  );
+  const isPaid = subscriptionStatus ? PAID_STATUSES.includes(subscriptionStatus) : false;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50">
@@ -45,21 +41,37 @@ export function PublicNav() {
                   {item.label}
                 </Link>
               ))}
-              
-              {isSubscribed ? (
-                <Link
-                  to="/app"
-                  className="btn-primary text-sm"
-                >
-                  Dashboard
-                </Link>
+
+              {/* Auth-aware buttons */}
+              {user ? (
+                <>
+                  {isPaid && (
+                    <Link to="/app" className="text-sm font-medium text-white/70 hover:text-white transition-colors">
+                      Dashboard
+                    </Link>
+                  )}
+                  <button
+                    onClick={signOut}
+                    className="text-sm text-white/50 hover:text-white transition-colors"
+                  >
+                    Sign Out
+                  </button>
+                </>
               ) : (
-                <Link
-                  to="/signup"
-                  className="btn-primary text-sm"
-                >
-                  Start for $35/mo
-                </Link>
+                <>
+                  <Link
+                    to="/login"
+                    className="text-sm font-medium text-white/70 hover:text-white transition-colors"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="btn-primary text-sm"
+                  >
+                    Start for $35/mo
+                  </Link>
+                </>
               )}
             </div>
 
@@ -92,13 +104,45 @@ export function PublicNav() {
                 {item.label}
               </Link>
             ))}
-            <Link
-              to="/signup"
-              onClick={() => setIsOpen(false)}
-              className="block btn-primary text-center"
-            >
-              Start for $35/mo
-            </Link>
+            {user ? (
+              <>
+                {isPaid && (
+                  <Link
+                    to="/app"
+                    onClick={() => setIsOpen(false)}
+                    className="block text-white/70 hover:text-white"
+                  >
+                    Dashboard
+                  </Link>
+                )}
+                <button
+                  onClick={() => {
+                    signOut();
+                    setIsOpen(false);
+                  }}
+                  className="block text-white/50 hover:text-white w-full text-left"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="block text-white/70 hover:text-white"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  onClick={() => setIsOpen(false)}
+                  className="block btn-primary text-center"
+                >
+                  Start for $35/mo
+                </Link>
+              </>
+            )}
           </div>
         </motion.div>
       )}
@@ -120,15 +164,13 @@ export function AppNav() {
           </Link>
 
           <div className="flex items-center gap-6">
+            {/* Home link to public site */}
             <Link
-              to="/pricing"
-              className={`text-sm font-medium transition-colors ${
-                location.pathname === '/pricing'
-                  ? 'text-gold-400'
-                  : 'text-white/70 hover:text-white'
-              }`}
+              to="/"
+              className="text-sm font-medium text-white/70 hover:text-white transition-colors flex items-center gap-1"
             >
-              Pricing
+              <Home className="w-4 h-4" />
+              <span className="hidden sm:inline">Home</span>
             </Link>
             {PAID_NAV.map((item) => (
               <Link
