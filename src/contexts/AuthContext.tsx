@@ -39,9 +39,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	}, []);
 
 	// Fetch subscription status from profiles table (source of truth)
-	// If profile doesn't exist or status is null, verify with backend API
+	// Only verify with API on explicit refresh, not on initial load
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const fetchSubscriptionFromDB = useCallback(async (userId: string, _userEmail?: string) => {
+	const fetchSubscriptionFromDB = useCallback(async (userId: string, _userEmail?: string, forceAPICheck = false) => {
 		if (!supabase) return null;
 		try {
 			const { data, error } = await supabase
@@ -51,20 +51,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				.single();
 
 			if (error) {
-				// If profile doesn't exist (PGRST116 = no rows), verify with API
-				if (error.code === 'PGRST116') {
+				// If profile doesn't exist (PGRST116 = no rows), only verify with API if forced
+				if (error.code === 'PGRST116' && forceAPICheck) {
 					console.log('Profile not found, verifying with API...');
 					return await verifySubscriptionWithAPI(userId);
-				} else {
-					console.warn('Could not fetch subscription from profiles:', error.message);
 				}
 				return null;
 			}
 
-			// If status is null or free, verify with API in case Stripe has updated
+			// Only call API if forced (e.g., after checkout success)
 			const status = data?.subscription_status;
-			if (!status || status === 'free') {
-				console.log('Status is', status, '- verifying with API...');
+			if (forceAPICheck && (!status || status === 'free')) {
+				console.log('Force checking API for status update...');
 				const apiStatus = await verifySubscriptionWithAPI(userId);
 				if (apiStatus && apiStatus !== 'free') {
 					return apiStatus;
@@ -80,8 +78,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 	const refreshUser = useCallback(async () => {
 		if (!supabase || !user) return;
-		// Fetch fresh subscription status from database (pass email for profile creation fallback)
-		const status = await fetchSubscriptionFromDB(user.id, user.email || undefined);
+		// Force API check when explicitly refreshing (e.g., after checkout)
+		const status = await fetchSubscriptionFromDB(user.id, user.email || undefined, true);
 		if (status) {
 			setDbSubscriptionStatus(status);
 		}
