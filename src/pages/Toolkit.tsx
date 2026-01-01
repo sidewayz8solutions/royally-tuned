@@ -81,7 +81,7 @@ export default function Toolkit() {
                 />
                 <div className="flex justify-between mt-2">
                   <span className="text-xs text-white/40">1K</span>
-                  <span className="text-2xl font-bold text-gold-400">{(streams / 1000).toLocaleString()}K</span>
+                  <span className="text-2xl font-bold text-green-400">{(streams / 1000).toLocaleString()}K</span>
                   <span className="text-xs text-white/40">10M</span>
                 </div>
               </div>
