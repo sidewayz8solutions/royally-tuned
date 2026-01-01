@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Crown, Mail, CheckCircle, ArrowRight, Loader2, Lock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'signup' | 'login' }) {
 	const [mode, setMode] = useState<'signup' | 'login'>(defaultMode);
@@ -13,7 +13,6 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 	const [error, setError] = useState('');
 	const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
 	const { signUp, signIn, user, subscriptionStatus } = useAuth();
-	const navigate = useNavigate();
 	const redirectAttempted = useRef(false);
 
 	// Redirect if user is already logged in with active subscription
@@ -21,9 +20,9 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 		const PAID_STATUSES = ['pro', 'active', 'trialing', 'enterprise'];
 		if (user && subscriptionStatus && PAID_STATUSES.includes(subscriptionStatus) && !loading && !redirectAttempted.current) {
 			redirectAttempted.current = true;
-			navigate('/app', { replace: true });
+			window.location.href = '/app';
 		}
-	}, [user, subscriptionStatus, loading, navigate]);
+	}, [user, subscriptionStatus, loading]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -53,8 +52,9 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 			} else {
 				// Login successful - redirect to app after brief delay
 				// Keep loading=true until redirect happens
+				// Use window.location for more reliable redirect
 				setTimeout(() => {
-					navigate('/app', { replace: true });
+					window.location.href = '/app';
 				}, 500);
 			}
 		} else {
