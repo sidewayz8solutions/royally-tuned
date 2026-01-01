@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Crown, Mail, CheckCircle, ArrowRight, Loader2, Lock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'signup' | 'login' }) {
 	const [mode, setMode] = useState<'signup' | 'login'>(defaultMode);
@@ -14,25 +14,26 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 	const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
 	const [pendingLogin, setPendingLogin] = useState(false);
 	const { signUp, signIn, user, subscriptionStatus } = useAuth();
+	const navigate = useNavigate();
 	const redirectAttempted = useRef(false);
 
 	// Redirect when user becomes logged in after login attempt
 	useEffect(() => {
 		if (pendingLogin && user && !redirectAttempted.current) {
 			redirectAttempted.current = true;
-			// User is now logged in, redirect to app
-			window.location.href = '/app';
+			// User is now logged in, redirect to app using react-router (no page reload)
+			navigate('/app', { replace: true });
 		}
-	}, [pendingLogin, user]);
+	}, [pendingLogin, user, navigate]);
 
 	// Redirect if user is already logged in with active subscription
 	useEffect(() => {
 		const PAID_STATUSES = ['pro', 'active', 'trialing', 'enterprise'];
 		if (user && subscriptionStatus && PAID_STATUSES.includes(subscriptionStatus) && !loading && !pendingLogin && !redirectAttempted.current) {
 			redirectAttempted.current = true;
-			window.location.href = '/app';
+			navigate('/app', { replace: true });
 		}
-	}, [user, subscriptionStatus, loading, pendingLogin]);
+	}, [user, subscriptionStatus, loading, pendingLogin, navigate]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
