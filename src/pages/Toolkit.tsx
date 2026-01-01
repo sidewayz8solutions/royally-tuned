@@ -73,7 +73,7 @@ export default function Toolkit() {
                 <input
                   type="range"
                   min="1000"
-                  max="10000000"
+                  max="1000000"
                   step="1000"
                   value={streams}
                   onChange={(e) => setStreams(Number(e.target.value))}
@@ -82,7 +82,7 @@ export default function Toolkit() {
                 <div className="flex justify-between mt-2">
                   <span className="text-xs text-white/40">1K</span>
                   <span className="text-2xl font-bold text-green-400">{(streams / 1000).toLocaleString()}K</span>
-                  <span className="text-xs text-white/40">10M</span>
+                  <span className="text-xs text-white/40">1M</span>
                 </div>
               </div>
 
