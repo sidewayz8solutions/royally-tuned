@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Crown, Mail, CheckCircle, ArrowRight, Loader2, Lock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,8 +12,31 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
 	const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
-	const { signUp, signIn } = useAuth();
+	const [loginSuccess, setLoginSuccess] = useState(false);
+	const { signUp, signIn, user, subscriptionStatus } = useAuth();
 	const navigate = useNavigate();
+	const redirectAttempted = useRef(false);
+
+	// Redirect to app when user is logged in with paid status after login attempt
+	useEffect(() => {
+		if (loginSuccess && user && !redirectAttempted.current) {
+			// Small delay to ensure auth state is fully updated
+			const timer = setTimeout(() => {
+				redirectAttempted.current = true;
+				navigate('/app', { replace: true });
+			}, 100);
+			return () => clearTimeout(timer);
+		}
+	}, [loginSuccess, user, navigate]);
+
+	// Also redirect if user is already logged in with active subscription
+	useEffect(() => {
+		const PAID_STATUSES = ['pro', 'active', 'trialing', 'enterprise'];
+		if (user && subscriptionStatus && PAID_STATUSES.includes(subscriptionStatus) && !loading && !redirectAttempted.current) {
+			redirectAttempted.current = true;
+			navigate('/app', { replace: true });
+		}
+	}, [user, subscriptionStatus, loading, navigate]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -31,19 +54,22 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 		}
 
 		setLoading(true);
+		setError('');
 		const action = mode === 'signup' ? signUp : signIn;
 		const result = await action(email, password);
-		setLoading(false);
 
 		if (result.ok) {
 			if (mode === 'signup') {
+				setLoading(false);
 				// Show email confirmation message
 				setShowEmailConfirmation(true);
 			} else {
-				// Logged in – send toward the app, RequireAuth will gate by subscription
-				navigate('/app', { replace: true });
+				// Mark login as successful - useEffect will handle redirect
+				// Keep loading=true until redirect happens
+				setLoginSuccess(true);
 			}
 		} else {
+			setLoading(false);
 			setError(result.error || 'Something went wrong. Please try again.');
 		}
 	};
