@@ -51,7 +51,7 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 			}
 			setLoading(false);
 		} else {
-			// For login, call signIn but don't await - redirect immediately
+			// For login, call signIn but don't await - redirect after a delay
 			// The signIn call triggers onAuthStateChange which can cause issues
 			signIn(email, password).then(result => {
 				if (!result.ok) {
@@ -60,10 +60,10 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 				}
 				// If ok, we've already redirected
 			});
-			// Redirect immediately - the auth state will be set by the time we get there
+			// Wait for auth state to be set before redirecting
 			setTimeout(() => {
 				window.location.href = '/app';
-			}, 500);
+			}, 1500);
 		}
 	};
 
