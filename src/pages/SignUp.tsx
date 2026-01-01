@@ -41,10 +41,13 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 
 		setLoading(true);
 		setError('');
+		console.log('[SignUp] Starting login...');
 		const action = mode === 'signup' ? signUp : signIn;
 		const result = await action(email, password);
+		console.log('[SignUp] Login result:', result);
 
 		if (result.ok) {
+			console.log('[SignUp] Login successful, redirecting...');
 			if (mode === 'signup') {
 				setLoading(false);
 				// Show email confirmation message
@@ -55,6 +58,7 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 				window.location.href = '/app';
 			}
 		} else {
+			console.log('[SignUp] Login failed:', result.error);
 			setLoading(false);
 			setError(result.error || 'Something went wrong. Please try again.');
 		}
