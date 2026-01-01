@@ -12,17 +12,27 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
 	const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
+	const [pendingLogin, setPendingLogin] = useState(false);
 	const { signUp, signIn, user, subscriptionStatus } = useAuth();
 	const redirectAttempted = useRef(false);
+
+	// Redirect when user becomes logged in after login attempt
+	useEffect(() => {
+		if (pendingLogin && user && !redirectAttempted.current) {
+			redirectAttempted.current = true;
+			// User is now logged in, redirect to app
+			window.location.href = '/app';
+		}
+	}, [pendingLogin, user]);
 
 	// Redirect if user is already logged in with active subscription
 	useEffect(() => {
 		const PAID_STATUSES = ['pro', 'active', 'trialing', 'enterprise'];
-		if (user && subscriptionStatus && PAID_STATUSES.includes(subscriptionStatus) && !loading && !redirectAttempted.current) {
+		if (user && subscriptionStatus && PAID_STATUSES.includes(subscriptionStatus) && !loading && !pendingLogin && !redirectAttempted.current) {
 			redirectAttempted.current = true;
 			window.location.href = '/app';
 		}
-	}, [user, subscriptionStatus, loading]);
+	}, [user, subscriptionStatus, loading, pendingLogin]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -51,19 +61,17 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 			}
 			setLoading(false);
 		} else {
-			// For login, call signIn but don't await - redirect after a delay
-			// The signIn call triggers onAuthStateChange which can cause issues
+			// For login, set pendingLogin and call signIn
+			// The useEffect will redirect when user becomes available
+			setPendingLogin(true);
 			signIn(email, password).then(result => {
 				if (!result.ok) {
+					setPendingLogin(false);
 					setLoading(false);
 					setError(result.error || 'Something went wrong. Please try again.');
 				}
-				// If ok, we've already redirected
+				// If ok, the useEffect will handle redirect when user is set
 			});
-			// Wait for auth state to be set before redirecting
-			setTimeout(() => {
-				window.location.href = '/app';
-			}, 1500);
 		}
 	};
 
