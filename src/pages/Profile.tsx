@@ -1,8 +1,9 @@
-import { useState, useRef } from 'react';
-import { User, Mail, Music, Building, Save, Upload, CheckCircle, Crown, Camera, ImagePlus, X, Palette } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { User, Mail, Music, Building, Save, Upload, CheckCircle, Crown, Camera, ImagePlus, X, Palette, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { FadeInOnScroll } from '../components/animations';
 import { motion } from 'framer-motion';
+import { supabase } from '../lib/supabaseClient';
 
 const colorOptions = [
   { name: 'Royal Purple', value: '#7c3aed', class: 'bg-royal-600' },
@@ -25,6 +26,8 @@ const backgroundOptions = [
 export default function Profile() {
   const { user, signOut } = useAuth();
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [profileColor, setProfileColor] = useState('#7c3aed');
   const [bgOption, setBgOption] = useState(backgroundOptions[0]);
   const [bannerImage, setBannerImage] = useState<string | null>(null);
@@ -47,6 +50,53 @@ export default function Profile() {
     spotify: '',
   });
 
+  // Load profile data on mount
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!supabase || !user?.id) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error loading profile:', error);
+        } else if (data) {
+          setFormData({
+            artistName: data.artist_name || '',
+            legalName: data.legal_name || '',
+            email: data.email || user?.email || '',
+            ipiNumber: data.ipi_number || '',
+            proAffiliation: data.pro_affiliation || '',
+            publisherName: data.publisher_name || '',
+            bio: data.bio || '',
+            website: data.website || '',
+            instagram: data.instagram || '',
+            spotify: data.spotify || '',
+          });
+          if (data.profile_color) setProfileColor(data.profile_color);
+          if (data.profile_image_url) setProfileImage(data.profile_image_url);
+          if (data.banner_image_url) setBannerImage(data.banner_image_url);
+          if (data.gallery_images) setGalleryImages(data.gallery_images);
+          if (data.background_option) {
+            const bg = backgroundOptions.find(b => b.name.toLowerCase().replace(' ', '_') === data.background_option);
+            if (bg) setBgOption(bg);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading profile:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProfile();
+  }, [user?.id, user?.email]);
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'banner' | 'profile' | 'gallery') => {
     const file = e.target.files?.[0];
     if (file) {
@@ -59,7 +109,6 @@ export default function Profile() {
       };
       reader.readAsDataURL(file);
     }
-    // Reset the input value so the same file can be selected again
     e.target.value = '';
   };
 
@@ -67,10 +116,59 @@ export default function Profile() {
     setGalleryImages(galleryImages.filter((_, i) => i !== index));
   };
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    if (!supabase || !user?.id) {
+      // Fallback: just show saved for demo
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const bgName = bgOption.name.toLowerCase().replace(' ', '_');
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          email: formData.email || user.email,
+          artist_name: formData.artistName,
+          legal_name: formData.legalName,
+          bio: formData.bio,
+          ipi_number: formData.ipiNumber,
+          pro_affiliation: formData.proAffiliation || 'none',
+          publisher_name: formData.publisherName,
+          profile_color: profileColor,
+          background_option: bgName,
+          website: formData.website,
+          instagram: formData.instagram,
+          spotify: formData.spotify,
+          gallery_images: galleryImages,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'id' });
+
+      if (error) {
+        console.error('Error saving profile:', error);
+        alert('Failed to save profile. Please try again.');
+      } else {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      }
+    } catch (err) {
+      console.error('Error saving profile:', err);
+      alert('Failed to save profile. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-royal-500 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen -mt-24 pt-24 ${bgOption.value}`}>
@@ -280,9 +378,9 @@ export default function Profile() {
               </div>
               </div>
 
-              <button onClick={handleSave} className="btn-primary flex items-center gap-2 w-full justify-center py-4">
-                {saved ? <CheckCircle className="w-5 h-5" /> : <Save className="w-5 h-5" />}
-                {saved ? 'Saved!' : 'Save Changes'}
+              <button onClick={handleSave} disabled={saving} className="btn-primary flex items-center gap-2 w-full justify-center py-4 disabled:opacity-50">
+                {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : saved ? <CheckCircle className="w-5 h-5" /> : <Save className="w-5 h-5" />}
+                {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
               </button>
             </div>
           </FadeInOnScroll>

@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileText, User, Music, Building, Mail, Phone, MapPin, Calendar,
-  CheckCircle, ExternalLink,
-  Globe, Hash, CreditCard, Landmark, Copyright, Radio, Disc
+  CheckCircle, ExternalLink, AlertCircle,
+  Globe, CreditCard, Landmark, Copyright, Radio, Disc
 } from 'lucide-react';
 import { FadeInOnScroll } from '../components/animations';
 
@@ -13,7 +13,6 @@ interface MasterFormData {
   legalName: string;
   artistName: string;
   dateOfBirth: string;
-  ssn: string;
   email: string;
   phone: string;
   street: string;
@@ -41,7 +40,7 @@ interface MasterFormData {
 }
 
 const initialFormData: MasterFormData = {
-  legalName: '', artistName: '', dateOfBirth: '', ssn: '', email: '', phone: '',
+  legalName: '', artistName: '', dateOfBirth: '', email: '', phone: '',
   street: '', city: '', state: '', zip: '', country: 'United States',
   ipiNumber: '', isniNumber: '', proAffiliation: '', proMemberNumber: '',
   publisherName: '', publisherIpi: '', isSelfPublished: true,
@@ -161,7 +160,6 @@ function MasterDataForm({ formData, updateField, onSave }: { formData: MasterFor
           <InputField label="Legal Full Name" value={formData.legalName} onChange={(v) => updateField('legalName', v)} placeholder="John Doe" icon={<User />} />
           <InputField label="Artist / Stage Name" value={formData.artistName} onChange={(v) => updateField('artistName', v)} placeholder="J.Doe" icon={<Music />} />
           <InputField label="Date of Birth" value={formData.dateOfBirth} onChange={(v) => updateField('dateOfBirth', v)} type="date" icon={<Calendar />} />
-          <InputField label="SSN (last 4 or full)" value={formData.ssn} onChange={(v) => updateField('ssn', v)} placeholder="XXX-XX-XXXX" icon={<Hash />} />
           <InputField label="Email" value={formData.email} onChange={(v) => updateField('email', v)} placeholder="artist@email.com" type="email" icon={<Mail />} />
           <InputField label="Phone" value={formData.phone} onChange={(v) => updateField('phone', v)} placeholder="(555) 123-4567" type="tel" icon={<Phone />} />
         </div>
@@ -269,14 +267,17 @@ function PROFormPreview({ formData }: { formData: MasterFormData }) {
         <FormField label="Legal Name" value={formData.legalName} missing={!formData.legalName} />
         <FormField label="Stage/Professional Name" value={formData.artistName} missing={!formData.artistName} />
         <FormField label="Date of Birth" value={formData.dateOfBirth} missing={!formData.dateOfBirth} />
-        <FormField label="SSN" value={formData.ssn ? '•••-••-' + formData.ssn.slice(-4) : ''} missing={!formData.ssn} />
         <FormField label="Email" value={formData.email} missing={!formData.email} />
         <FormField label="Phone" value={formData.phone} missing={!formData.phone} />
         <FormField label="Address" value={`${formData.street}, ${formData.city}, ${formData.state} ${formData.zip}`} missing={!formData.street} />
         <FormField label="IPI Number" value={formData.ipiNumber} missing={!formData.ipiNumber} />
         <FormField label="Publisher" value={formData.isSelfPublished ? 'Self-Published' : formData.publisherName} />
       </div>
-      <div className="mt-6 p-4 bg-yellow-400/10 rounded-xl border border-yellow-400/20">
+      <div className="mt-6 p-4 bg-red-500/10 rounded-xl border border-red-500/20 flex items-start gap-3">
+        <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+        <p className="text-red-400 text-sm"><strong>SSN Required:</strong> Have your Social Security Number ready when you visit the {proName} website. For your security, we don't store SSN data.</p>
+      </div>
+      <div className="mt-4 p-4 bg-yellow-400/10 rounded-xl border border-yellow-400/20">
         <p className="text-yellow-400 text-sm">💡 Copy this info when filling out your {proName} application. Your IPI number will be assigned after registration.</p>
       </div>
     </div>
@@ -324,7 +325,6 @@ function SoundExchangeFormPreview({ formData }: { formData: MasterFormData }) {
       <div className="space-y-1">
         <FormField label="Legal Name" value={formData.legalName} missing={!formData.legalName} />
         <FormField label="Artist/Band Name" value={formData.artistName} missing={!formData.artistName} />
-        <FormField label="SSN/TIN" value={formData.ssn ? '•••-••-' + formData.ssn.slice(-4) : ''} missing={!formData.ssn} />
         <FormField label="Date of Birth" value={formData.dateOfBirth} missing={!formData.dateOfBirth} />
         <FormField label="Email" value={formData.email} missing={!formData.email} />
         <FormField label="Phone" value={formData.phone} missing={!formData.phone} />
@@ -332,7 +332,11 @@ function SoundExchangeFormPreview({ formData }: { formData: MasterFormData }) {
         <FormField label="ISNI Number" value={formData.isniNumber} />
         <FormField label="Payment Method" value={formData.paymentMethod === 'direct_deposit' ? 'Direct Deposit' : formData.paymentMethod === 'check' ? 'Check' : ''} missing={!formData.paymentMethod} />
       </div>
-      <div className="mt-6 p-4 bg-yellow-400/10 rounded-xl border border-yellow-400/20">
+      <div className="mt-6 p-4 bg-red-500/10 rounded-xl border border-red-500/20 flex items-start gap-3">
+        <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+        <p className="text-red-400 text-sm"><strong>SSN/TIN Required:</strong> Have your Social Security Number or Tax ID ready when you visit SoundExchange. For your security, we don't store this data.</p>
+      </div>
+      <div className="mt-4 p-4 bg-yellow-400/10 rounded-xl border border-yellow-400/20">
         <p className="text-yellow-400 text-sm">💡 SoundExchange collects royalties from digital radio (Pandora, SiriusXM, etc.). Register as both Featured Artist AND Sound Recording Owner if you own your masters.</p>
       </div>
     </div>
