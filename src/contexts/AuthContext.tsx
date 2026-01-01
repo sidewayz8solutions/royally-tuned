@@ -19,9 +19,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const [loading, setLoading] = useState(true);
 	const [dbSubscriptionStatus, setDbSubscriptionStatus] = useState<string | null>(null);
 
+	// Verify subscription with backend API (checks Stripe and updates profile)
+	const verifySubscriptionWithAPI = useCallback(async (userId: string): Promise<string | null> => {
+		try {
+			const response = await fetch('/api/verify-subscription', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ userId }),
+			});
+			if (response.ok) {
+				const data = await response.json();
+				console.log('Subscription verified via API:', data);
+				return data.status || null;
+			}
+		} catch (e) {
+			console.warn('Failed to verify subscription via API:', e);
+		}
+		return null;
+	}, []);
+
 	// Fetch subscription status from profiles table (source of truth)
-	// If profile doesn't exist, try to create it
-	const fetchSubscriptionFromDB = useCallback(async (userId: string, userEmail?: string) => {
+	// If profile doesn't exist or status is null, verify with backend API
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	const fetchSubscriptionFromDB = useCallback(async (userId: string, _userEmail?: string) => {
 		if (!supabase) return null;
 		try {
 			const { data, error } = await supabase
@@ -31,32 +51,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				.single();
 
 			if (error) {
-				// If profile doesn't exist (PGRST116 = no rows), try to create it
-				if (error.code === 'PGRST116' && userEmail) {
-					console.log('Profile not found, attempting to create one...');
-					const { error: insertError } = await supabase
-						.from('profiles')
-						.insert({ id: userId, email: userEmail })
-						.single();
-
-					if (insertError) {
-						console.warn('Could not create profile:', insertError.message);
-					} else {
-						console.log('Profile created successfully');
-						// Return 'free' as default status for new profile
-						return 'free';
-					}
+				// If profile doesn't exist (PGRST116 = no rows), verify with API
+				if (error.code === 'PGRST116') {
+					console.log('Profile not found, verifying with API...');
+					return await verifySubscriptionWithAPI(userId);
 				} else {
 					console.warn('Could not fetch subscription from profiles:', error.message);
 				}
 				return null;
 			}
-			return data?.subscription_status || null;
+
+			// If status is null or free, verify with API in case Stripe has updated
+			const status = data?.subscription_status;
+			if (!status || status === 'free') {
+				console.log('Status is', status, '- verifying with API...');
+				const apiStatus = await verifySubscriptionWithAPI(userId);
+				if (apiStatus && apiStatus !== 'free') {
+					return apiStatus;
+				}
+			}
+
+			return status || null;
 		} catch (e) {
 			console.warn('Failed to fetch subscription:', e);
 			return null;
 		}
-	}, []);
+	}, [verifySubscriptionWithAPI]);
 
 	const refreshUser = useCallback(async () => {
 		if (!supabase || !user) return;
