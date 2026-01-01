@@ -55,10 +55,12 @@ export default function Profile() {
         const result = reader.result as string;
         if (type === 'banner') setBannerImage(result);
         else if (type === 'profile') setProfileImage(result);
-        else if (type === 'gallery') setGalleryImages([...galleryImages, result]);
+        else if (type === 'gallery') setGalleryImages(prev => [...prev, result]);
       };
       reader.readAsDataURL(file);
     }
+    // Reset the input value so the same file can be selected again
+    e.target.value = '';
   };
 
   const removeGalleryImage = (index: number) => {
@@ -135,10 +137,10 @@ export default function Profile() {
                   </motion.div>
                 ))}
                 {galleryImages.length < 6 && (
-                  <div onClick={() => galleryInputRef.current?.click()} className="aspect-square rounded-xl border-2 border-dashed border-white/20 flex items-center justify-center cursor-pointer hover:border-royal-500/50 transition-colors">
+                  <label className="aspect-square rounded-xl border-2 border-dashed border-white/20 flex items-center justify-center cursor-pointer hover:border-royal-500/50 transition-colors">
                     <ImagePlus className="w-8 h-8 text-white/30" />
                     <input ref={galleryInputRef} type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'gallery')} />
-                  </div>
+                  </label>
                 )}
               </div>
               <p className="text-xs text-white/40 mt-3">Add up to 6 photos to showcase your music journey</p>

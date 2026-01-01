@@ -23,6 +23,17 @@
   box-sizing: border-box;
 }
 
+/* Text Selection Highlight - Bright Yellow */
+::selection {
+  background-color: #facc15;
+  color: #000000;
+}
+
+::-moz-selection {
+  background-color: #facc15;
+  color: #000000;
+}
+
 /* Logo Watermark Background */
 .logo-watermark {
   position: fixed;
