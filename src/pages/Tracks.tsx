@@ -29,10 +29,9 @@ export default function Tracks() {
   const [newTrack, setNewTrack] = useState({ title: '', isrc: '' });
   const supabaseMissing = !supabase;
 
-  // Fetch tracks from Supabase
+  // Fetch tracks from Supabase with timeout protection
   useEffect(() => {
     if (!user) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(false);
       return;
     }
@@ -40,28 +39,53 @@ export default function Tracks() {
       setLoading(false);
       return;
     }
-    
+
+    let isMounted = true;
+
     const fetchTracks = async () => {
       setLoading(true);
-      const client = supabase!;
-      // eslint-disable-next-line no-console
-      console.debug('[Tracks] fetching tracks for user', user?.id);
-      const { data, error } = await client
-        .from('tracks')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
-      
-      if (!error && data) {
-        setTracks(data);
-        // eslint-disable-next-line no-console
-        console.debug('[Tracks] fetched', data.length, 'tracks');
+      try {
+        const client = supabase!;
+        console.debug('[Tracks] fetching tracks for user', user?.id);
+        const { data, error } = await client
+          .from('tracks')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
+
+        if (!isMounted) return;
+
+        if (error) {
+          console.warn('[Tracks] fetch error:', error);
+          setTracks([]);
+        } else {
+          setTracks(data || []);
+          console.debug('[Tracks] fetched', (data || []).length, 'tracks');
+        }
+      } catch (err) {
+        console.error('[Tracks] fetch failed:', err);
+        if (isMounted) setTracks([]);
+      } finally {
+        if (isMounted) setLoading(false);
       }
-      setLoading(false);
     };
 
-    fetchTracks();
+    // Timeout fallback
+    const timeoutId = setTimeout(() => {
+      if (isMounted) {
+        console.warn('[Tracks] fetch timeout - showing empty state');
+        setTracks([]);
+        setLoading(false);
+      }
+    }, 10000);
+
+    fetchTracks().finally(() => clearTimeout(timeoutId));
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
   }, [user]);
 
   const filteredTracks = tracks.filter(track =>

@@ -69,7 +69,7 @@ export default function Dashboard() {
     }
   }, [searchParams, setSearchParams, refreshUser]);
 
-  // Fetch real data from Supabase
+  // Fetch real data from Supabase with timeout protection
   useEffect(() => {
     if (!user) {
       setLoading(false);
@@ -79,35 +79,61 @@ export default function Dashboard() {
       setLoading(false);
       return;
     }
-    
+
+    let isMounted = true;
+    const controller = new AbortController();
+
     const fetchData = async () => {
       setLoading(true);
       try {
         const client = supabase!;
         // eslint-disable-next-line no-console
         console.debug('[Dashboard] fetching data for user', user?.id);
-        // Fetch tracks
-        const { data: tracksData } = await client
-          .from('tracks')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('is_active', true);
-        
-        // Fetch earnings with track titles
-        const { data: earningsData } = await client
-          .from('earnings')
-          .select('*, tracks(title)')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(50);
-        
-        // Fetch notifications
-        const { data: notificationsData } = await client
-          .from('notifications')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(10);
+
+        // Fetch all data in parallel with individual error handling
+        const [tracksResult, earningsResult, notificationsResult] = await Promise.allSettled([
+          client
+            .from('tracks')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('is_active', true),
+          client
+            .from('earnings')
+            .select('*, tracks(title)')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(50),
+          client
+            .from('notifications')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(10),
+        ]);
+
+        if (!isMounted) return;
+
+        // Extract data with graceful fallbacks
+        const tracksData = tracksResult.status === 'fulfilled' && !tracksResult.value.error
+          ? tracksResult.value.data
+          : [];
+        const earningsData = earningsResult.status === 'fulfilled' && !earningsResult.value.error
+          ? earningsResult.value.data
+          : [];
+        const notificationsData = notificationsResult.status === 'fulfilled' && !notificationsResult.value.error
+          ? notificationsResult.value.data
+          : [];
+
+        // Log any errors for debugging
+        if (tracksResult.status === 'rejected' || (tracksResult.status === 'fulfilled' && tracksResult.value.error)) {
+          console.warn('[Dashboard] tracks fetch failed:', tracksResult.status === 'rejected' ? tracksResult.reason : tracksResult.value.error);
+        }
+        if (earningsResult.status === 'rejected' || (earningsResult.status === 'fulfilled' && earningsResult.value.error)) {
+          console.warn('[Dashboard] earnings fetch failed:', earningsResult.status === 'rejected' ? earningsResult.reason : earningsResult.value.error);
+        }
+        if (notificationsResult.status === 'rejected' || (notificationsResult.status === 'fulfilled' && notificationsResult.value.error)) {
+          console.warn('[Dashboard] notifications fetch failed:', notificationsResult.status === 'rejected' ? notificationsResult.reason : notificationsResult.value.error);
+        }
 
         setTracks(tracksData || []);
         setEarnings(earningsData || []);
@@ -120,12 +146,39 @@ export default function Dashboard() {
         });
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err);
+        // Still set empty arrays on error so UI can render
+        if (isMounted) {
+          setTracks([]);
+          setEarnings([]);
+          setNotifications([]);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    fetchData();
+    // Add a timeout fallback - if fetching takes too long, show empty state
+    const timeoutId = setTimeout(() => {
+      if (isMounted) {
+        console.warn('[Dashboard] fetch timeout - showing empty state');
+        setTracks([]);
+        setEarnings([]);
+        setNotifications([]);
+        setLoading(false);
+      }
+    }, 10000); // 10 second timeout
+
+    fetchData().finally(() => {
+      clearTimeout(timeoutId);
+    });
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+      clearTimeout(timeoutId);
+    };
   }, [user]);
 
   // Calculate stats from real data

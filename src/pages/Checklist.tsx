@@ -49,10 +49,9 @@ export default function Checklist() {
   const [loading, setLoading] = useState(true);
   const supabaseMissing = !supabase;
 
-  // Fetch checklist items from Supabase
+  // Fetch checklist items from Supabase with timeout protection
   useEffect(() => {
     if (!user) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(false);
       return;
     }
@@ -61,43 +60,101 @@ export default function Checklist() {
       return;
     }
 
+    let isMounted = true;
+
     const fetchChecklist = async () => {
       setLoading(true);
-      const client = supabase!;
-      // eslint-disable-next-line no-console
-      console.debug('[Checklist] fetching items for user', user.id);
-      const { data, error } = await client
-        .from('checklist_items')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('sort_order', { ascending: true });
-
-      if (!error && data && data.length > 0) {
-        setItems(data);
-        // eslint-disable-next-line no-console
-        console.debug('[Checklist] loaded existing items:', data.length);
-      } else if (!error && (!data || data.length === 0)) {
-        // Create default checklist for new user
-        const newItems = defaultItems.map(item => ({
-          ...item,
-          user_id: user.id,
-        }));
-        
-        const { data: inserted } = await client
+      try {
+        const client = supabase!;
+        console.debug('[Checklist] fetching items for user', user.id);
+        const { data, error } = await client
           .from('checklist_items')
-          .insert(newItems)
-          .select();
-        
-        if (inserted) {
-          setItems(inserted);
-          // eslint-disable-next-line no-console
-          console.debug('[Checklist] seeded default items:', inserted.length);
+          .select('*')
+          .eq('user_id', user.id)
+          .order('sort_order', { ascending: true });
+
+        if (!isMounted) return;
+
+        if (error) {
+          console.warn('[Checklist] fetch error:', error);
+          // Fall back to local defaults on error
+          const localItems = defaultItems.map((item, i) => ({
+            ...item,
+            id: `local-${i}`,
+          }));
+          setItems(localItems as ChecklistItem[]);
+        } else if (data && data.length > 0) {
+          setItems(data);
+          console.debug('[Checklist] loaded existing items:', data.length);
+        } else {
+          // No items - try to create defaults or use local fallback
+          try {
+            const newItems = defaultItems.map(item => ({
+              ...item,
+              user_id: user.id,
+            }));
+
+            const { data: inserted, error: insertError } = await client
+              .from('checklist_items')
+              .insert(newItems)
+              .select();
+
+            if (!isMounted) return;
+
+            if (insertError) {
+              console.warn('[Checklist] insert error, using local fallback:', insertError);
+              const localItems = defaultItems.map((item, i) => ({
+                ...item,
+                id: `local-${i}`,
+              }));
+              setItems(localItems as ChecklistItem[]);
+            } else if (inserted) {
+              setItems(inserted);
+              console.debug('[Checklist] seeded default items:', inserted.length);
+            }
+          } catch (insertErr) {
+            console.warn('[Checklist] insert failed, using local fallback:', insertErr);
+            const localItems = defaultItems.map((item, i) => ({
+              ...item,
+              id: `local-${i}`,
+            }));
+            setItems(localItems as ChecklistItem[]);
+          }
         }
+      } catch (err) {
+        console.error('[Checklist] fetch failed:', err);
+        if (isMounted) {
+          // Fallback to local defaults
+          const localItems = defaultItems.map((item, i) => ({
+            ...item,
+            id: `local-${i}`,
+          }));
+          setItems(localItems as ChecklistItem[]);
+        }
+      } finally {
+        if (isMounted) setLoading(false);
       }
-      setLoading(false);
     };
 
-    fetchChecklist();
+    // Timeout fallback
+    const timeoutId = setTimeout(() => {
+      if (isMounted) {
+        console.warn('[Checklist] fetch timeout - using local defaults');
+        const localItems = defaultItems.map((item, i) => ({
+          ...item,
+          id: `local-${i}`,
+        }));
+        setItems(localItems as ChecklistItem[]);
+        setLoading(false);
+      }
+    }, 10000);
+
+    fetchChecklist().finally(() => clearTimeout(timeoutId));
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
   }, [user]);
 
   // Toggle item completion
