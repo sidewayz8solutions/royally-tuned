@@ -14,6 +14,7 @@ import Tracks from './pages/Tracks';
 import Checklist from './pages/Checklist';
 import Toolkit from './pages/Toolkit';
 import Profile from './pages/Profile';
+import Registrations from './pages/Registrations';
 import RequireAuth from './components/RequireAuth';
 import AuthCallback from './pages/AuthCallback';
 
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/app/tracks" element={<Tracks />} />
           <Route path="/app/checklist" element={<Checklist />} />
           <Route path="/app/toolkit" element={<Toolkit />} />
+          <Route path="/app/registrations" element={<Registrations />} />
           <Route path="/app/profile" element={<Profile />} />
         </Route>
       </Routes>

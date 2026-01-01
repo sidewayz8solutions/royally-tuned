@@ -72,6 +72,7 @@ export const PAID_NAV: NavItem[] = [
   { label: 'Dashboard', path: '/app' },
   { label: 'Tracks', path: '/app/tracks' },
   { label: 'Checklist', path: '/app/checklist' },
+  { label: 'Registrations', path: '/app/registrations' },
   { label: 'Toolkit', path: '/app/toolkit' },
   { label: 'Profile', path: '/app/profile' },
 ];
