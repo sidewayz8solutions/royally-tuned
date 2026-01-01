@@ -12,24 +12,11 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
 	const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
-	const [loginSuccess, setLoginSuccess] = useState(false);
 	const { signUp, signIn, user, subscriptionStatus } = useAuth();
 	const navigate = useNavigate();
 	const redirectAttempted = useRef(false);
 
-	// Redirect to app when user is logged in with paid status after login attempt
-	useEffect(() => {
-		if (loginSuccess && user && !redirectAttempted.current) {
-			// Small delay to ensure auth state is fully updated
-			const timer = setTimeout(() => {
-				redirectAttempted.current = true;
-				navigate('/app', { replace: true });
-			}, 100);
-			return () => clearTimeout(timer);
-		}
-	}, [loginSuccess, user, navigate]);
-
-	// Also redirect if user is already logged in with active subscription
+	// Redirect if user is already logged in with active subscription
 	useEffect(() => {
 		const PAID_STATUSES = ['pro', 'active', 'trialing', 'enterprise'];
 		if (user && subscriptionStatus && PAID_STATUSES.includes(subscriptionStatus) && !loading && !redirectAttempted.current) {
@@ -64,9 +51,11 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 				// Show email confirmation message
 				setShowEmailConfirmation(true);
 			} else {
-				// Mark login as successful - useEffect will handle redirect
+				// Login successful - redirect to app after brief delay
 				// Keep loading=true until redirect happens
-				setLoginSuccess(true);
+				setTimeout(() => {
+					navigate('/app', { replace: true });
+				}, 500);
 			}
 		} else {
 			setLoading(false);
