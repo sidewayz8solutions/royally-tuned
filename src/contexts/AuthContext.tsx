@@ -171,13 +171,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		try {
 			if (!supabase) return { ok: false, error: 'Auth not configured' };
 
+			console.log('[AuthContext] signIn: calling signInWithPassword...');
 			const { error } = await supabase.auth.signInWithPassword({
 				email,
 				password,
 			});
+			console.log('[AuthContext] signIn: signInWithPassword returned, error:', error);
 			if (error) return { ok: false, error: error.message };
+			console.log('[AuthContext] signIn: returning ok: true');
 			return { ok: true };
 		} catch (e) {
+			console.log('[AuthContext] signIn: caught error:', e);
 			return { ok: false, error: e instanceof Error ? e.message : 'Unknown error' };
 		}
 	};
