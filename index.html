@@ -7,6 +7,36 @@
     <meta name="description" content="Royally Tuned - Music Rights Management Platform. Track your royalties, manage splits, and register your music." />
     <meta name="theme-color" content="#7c3aed" />
     <title>Royally Tuned | Music Rights Management</title>
+
+    <!-- Preconnect to external domains for faster loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Preload critical fonts with display=swap for faster First Contentful Paint -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
+
+    <!-- Preload critical assets -->
+    <link rel="preload" href="/logo2.png" as="image" />
+    <link rel="preload" href="/crown.svg" as="image" />
+
+    <!-- Fallback for browsers without JS -->
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    </noscript>
+
+    <!-- Inline critical CSS for instant render -->
+    <style>
+      body {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        background: #0d0d0d;
+        margin: 0;
+        min-height: 100vh;
+      }
+      #root {
+        min-height: 100vh;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

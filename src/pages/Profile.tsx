@@ -83,8 +83,9 @@ export default function Profile() {
           if (data.profile_image_url) setProfileImage(data.profile_image_url);
           if (data.banner_image_url) setBannerImage(data.banner_image_url);
           if (data.gallery_images) setGalleryImages(data.gallery_images);
-          if (data.background_option) {
-            const bg = backgroundOptions.find(b => b.name.toLowerCase().replace(' ', '_') === data.background_option);
+          // Load background from custom_background_url which stores the actual CSS value
+          if (data.custom_background_url) {
+            const bg = backgroundOptions.find(b => b.value === data.custom_background_url);
             if (bg) setBgOption(bg);
           }
         }
@@ -126,7 +127,8 @@ export default function Profile() {
 
     setSaving(true);
     try {
-      const bgName = bgOption.name.toLowerCase().replace(' ', '_');
+      // Map background option name to database enum value
+      const bgEnumValue = bgOption.name.toLowerCase().includes('gradient') ? 'gradient' : 'solid';
       const { error } = await supabase
         .from('profiles')
         .upsert({
@@ -139,7 +141,8 @@ export default function Profile() {
           pro_affiliation: formData.proAffiliation || 'none',
           publisher_name: formData.publisherName,
           profile_color: profileColor,
-          background_option: bgName,
+          background_option: bgEnumValue,
+          custom_background_url: bgOption.value, // Store the actual CSS class/value
           website: formData.website,
           instagram: formData.instagram,
           spotify: formData.spotify,
@@ -235,10 +238,13 @@ export default function Profile() {
                   </motion.div>
                 ))}
                 {galleryImages.length < 6 && (
-                  <label className="aspect-square rounded-xl border-2 border-dashed border-white/20 flex items-center justify-center cursor-pointer hover:border-royal-500/50 transition-colors">
+                  <div
+                    onClick={() => galleryInputRef.current?.click()}
+                    className="aspect-square rounded-xl border-2 border-dashed border-white/20 flex items-center justify-center cursor-pointer hover:border-royal-500/50 transition-colors"
+                  >
                     <ImagePlus className="w-8 h-8 text-white/30" />
                     <input ref={galleryInputRef} type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'gallery')} />
-                  </label>
+                  </div>
                 )}
               </div>
               <p className="text-xs text-white/40 mt-3">Add up to 6 photos to showcase your music journey</p>
