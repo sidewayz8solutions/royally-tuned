@@ -1,7 +1,14 @@
 import Stripe from 'stripe';
 import { supabaseAdmin } from './_supabaseAdmin.js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, { apiVersion: '2025-12-15.clover' });
+// Check for required environment variables
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+const stripe = STRIPE_SECRET_KEY
+  ? new Stripe(STRIPE_SECRET_KEY, { apiVersion: '2025-12-15.clover' })
+  : null;
 
 // Map Stripe subscription status to our DB enum values
 function mapStripeStatusToDbStatus(stripeStatus: string): string {
@@ -27,18 +34,36 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Check for required environment variables
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('Missing Supabase environment variables');
+    return res.status(500).json({
+      error: 'Server configuration error',
+      details: 'Supabase not configured'
+    });
+  }
+
+  if (!stripe) {
+    console.error('Missing Stripe environment variables');
+    return res.status(500).json({
+      error: 'Server configuration error',
+      details: 'Stripe not configured'
+    });
+  }
+
   try {
     const { userId } = req.body;
-    
+
     if (!userId) {
       return res.status(400).json({ error: 'userId is required' });
     }
 
     // Get user from Supabase Auth
     const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
-    
+
     if (userError || !userData?.user) {
-      return res.status(404).json({ error: 'User not found' });
+      console.error('User lookup failed:', userError);
+      return res.status(404).json({ error: 'User not found', details: userError?.message });
     }
 
     const user = userData.user;
@@ -117,7 +142,10 @@ export default async function handler(req: any, res: any) {
 
   } catch (error) {
     console.error('verify-subscription error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 }
 
