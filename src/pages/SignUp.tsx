@@ -50,12 +50,9 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 				// Show email confirmation message
 				setShowEmailConfirmation(true);
 			} else {
-				// Login successful - redirect to app after brief delay
-				// Keep loading=true until redirect happens
-				// Use window.location for more reliable redirect
-				setTimeout(() => {
-					window.location.href = '/app';
-				}, 500);
+				// Login successful - redirect to app immediately
+				// Use window.location for reliable redirect
+				window.location.href = '/app';
 			}
 		} else {
 			setLoading(false);
