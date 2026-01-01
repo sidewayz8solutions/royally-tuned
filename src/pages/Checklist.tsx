@@ -249,12 +249,12 @@ export default function Checklist() {
                   className="w-full p-6 flex items-center gap-4 text-left hover:bg-white/5 transition-colors"
                 >
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    catCompleted === category.items.length && category.items.length > 0 ? 'bg-green-500/20' : 'bg-royal-600/20'
+                    catCompleted === category.items.length && category.items.length > 0 ? 'bg-green-500/20' : 'bg-yellow-400/20'
                   }`}>
                     {catCompleted === category.items.length && category.items.length > 0 ? (
                       <CheckCircle className="w-5 h-5 text-green-500" />
                     ) : (
-                      <AlertCircle className="w-5 h-5 text-royal-500" />
+                      <AlertCircle className="w-5 h-5 text-yellow-400" />
                     )}
                   </div>
                   <div className="flex-1">
@@ -280,7 +280,7 @@ export default function Checklist() {
                           {item.completed ? (
                             <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
                           ) : (
-                            <Circle className="w-5 h-5 text-white/30 mt-0.5 flex-shrink-0" />
+                            <Circle className="w-5 h-5 text-yellow-400 mt-0.5 flex-shrink-0" />
                           )}
                           <div className="flex-1">
                             <p className={`font-medium ${item.completed ? 'text-white/50 line-through' : 'text-white'}`}>{item.title}</p>
