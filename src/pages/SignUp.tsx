@@ -41,26 +41,29 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 
 		setLoading(true);
 		setError('');
-		console.log('[SignUp] Starting login...');
-		const action = mode === 'signup' ? signUp : signIn;
-		const result = await action(email, password);
-		console.log('[SignUp] Login result:', result);
 
-		if (result.ok) {
-			console.log('[SignUp] Login successful, redirecting...');
-			if (mode === 'signup') {
-				setLoading(false);
-				// Show email confirmation message
+		if (mode === 'signup') {
+			const result = await signUp(email, password);
+			if (result.ok) {
 				setShowEmailConfirmation(true);
 			} else {
-				// Login successful - redirect to app immediately
-				// Use window.location for reliable redirect
-				window.location.href = '/app';
+				setError(result.error || 'Something went wrong. Please try again.');
 			}
-		} else {
-			console.log('[SignUp] Login failed:', result.error);
 			setLoading(false);
-			setError(result.error || 'Something went wrong. Please try again.');
+		} else {
+			// For login, call signIn but don't await - redirect immediately
+			// The signIn call triggers onAuthStateChange which can cause issues
+			signIn(email, password).then(result => {
+				if (!result.ok) {
+					setLoading(false);
+					setError(result.error || 'Something went wrong. Please try again.');
+				}
+				// If ok, we've already redirected
+			});
+			// Redirect immediately - the auth state will be set by the time we get there
+			setTimeout(() => {
+				window.location.href = '/app';
+			}, 500);
 		}
 	};
 
