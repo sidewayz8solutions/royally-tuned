@@ -292,8 +292,8 @@ export default function Dashboard() {
             <TiltCard>
               <div className="glass-card rounded-2xl p-6">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-royal-600/20 flex items-center justify-center">
-                    <stat.icon className="w-5 h-5 text-royal-500" />
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${i === 0 ? 'bg-green-400/20' : 'bg-yellow-400/20'}`}>
+                    <stat.icon className={`w-5 h-5 ${i === 0 ? 'text-green-400' : 'text-yellow-400'}`} />
                   </div>
                 </div>
                 <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>

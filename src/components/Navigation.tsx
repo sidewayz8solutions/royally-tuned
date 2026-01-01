@@ -178,7 +178,7 @@ export function AppNav() {
                 to={item.path}
                 className={`text-sm font-medium transition-colors ${
                   location.pathname === item.path
-                    ? 'text-gold-400'
+                    ? 'text-yellow-400 font-semibold'
                     : 'text-white/70 hover:text-white'
                 }`}
               >
