@@ -25,11 +25,13 @@ function mapStripeStatusToDbStatus(stripeStatus: string): string {
 async function updateUser(userId: string, fields: Record<string, unknown>) {
   // Update auth.users app_metadata (can store any string)
   // Preserve existing app_metadata instead of overwriting it entirely.
+  let userEmail: string | null = null;
   try {
     const { data: existingUser, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
     if (userError || !existingUser?.user) {
       console.error('stripe-webhook: failed to fetch user before updateUser', userError);
     } else {
+      userEmail = existingUser.user.email || null;
       const currentMeta = (existingUser.user.app_metadata || {}) as Record<string, unknown>;
       await supabaseAdmin.auth.admin.updateUserById(userId, {
         app_metadata: { ...currentMeta, ...(fields || {}) },
@@ -38,22 +40,29 @@ async function updateUser(userId: string, fields: Record<string, unknown>) {
   } catch (e) {
     console.error('stripe-webhook: error updating auth app_metadata', e);
   }
-  
+
   // Also update profiles table - must use valid ENUM value
+  // Include email since it's a NOT NULL field required for upsert
   const profileFields: Record<string, unknown> = { id: userId };
+  if (userEmail) profileFields.email = userEmail;
   if (fields.stripe_customer_id) profileFields.stripe_customer_id = fields.stripe_customer_id;
   if (fields.subscription_status) {
     // Map to valid DB enum value
     profileFields.subscription_status = mapStripeStatusToDbStatus(fields.subscription_status as string);
   }
-  
-  if (Object.keys(profileFields).length > 1) {
+
+  // Only upsert if we have the required email field
+  if (profileFields.email && Object.keys(profileFields).length > 2) {
     const { error } = await supabaseAdmin
       .from('profiles')
       .upsert(profileFields, { onConflict: 'id' });
     if (error) {
       console.error('Failed to upsert profiles table:', error);
+    } else {
+      console.log('stripe-webhook: successfully upserted profile for user', userId);
     }
+  } else if (!profileFields.email) {
+    console.warn('stripe-webhook: skipping profile upsert - no email available for user', userId);
   }
 }
 

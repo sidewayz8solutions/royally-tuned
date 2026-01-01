@@ -20,7 +20,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const [dbSubscriptionStatus, setDbSubscriptionStatus] = useState<string | null>(null);
 
 	// Fetch subscription status from profiles table (source of truth)
-	const fetchSubscriptionFromDB = useCallback(async (userId: string) => {
+	// If profile doesn't exist, try to create it
+	const fetchSubscriptionFromDB = useCallback(async (userId: string, userEmail?: string) => {
 		if (!supabase) return null;
 		try {
 			const { data, error } = await supabase
@@ -28,8 +29,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				.select('subscription_status')
 				.eq('id', userId)
 				.single();
+
 			if (error) {
-				console.warn('Could not fetch subscription from profiles:', error.message);
+				// If profile doesn't exist (PGRST116 = no rows), try to create it
+				if (error.code === 'PGRST116' && userEmail) {
+					console.log('Profile not found, attempting to create one...');
+					const { error: insertError } = await supabase
+						.from('profiles')
+						.insert({ id: userId, email: userEmail })
+						.single();
+
+					if (insertError) {
+						console.warn('Could not create profile:', insertError.message);
+					} else {
+						console.log('Profile created successfully');
+						// Return 'free' as default status for new profile
+						return 'free';
+					}
+				} else {
+					console.warn('Could not fetch subscription from profiles:', error.message);
+				}
 				return null;
 			}
 			return data?.subscription_status || null;
@@ -41,8 +60,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 	const refreshUser = useCallback(async () => {
 		if (!supabase || !user) return;
-		// Fetch fresh subscription status from database
-		const status = await fetchSubscriptionFromDB(user.id);
+		// Fetch fresh subscription status from database (pass email for profile creation fallback)
+		const status = await fetchSubscriptionFromDB(user.id, user.email || undefined);
 		if (status) {
 			setDbSubscriptionStatus(status);
 		}
@@ -70,8 +89,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				if (!isMounted) return;
 				setUser(data.user ?? null);
 				// Also fetch DB subscription status (don't block on failure)
+				// Pass email for profile creation fallback if profile doesn't exist
 				if (data.user) {
-					fetchSubscriptionFromDB(data.user.id).then(status => {
+					fetchSubscriptionFromDB(data.user.id, data.user.email || undefined).then(status => {
 						if (status && isMounted) setDbSubscriptionStatus(status);
 					});
 				}
@@ -86,7 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		const { data: sub } = supabase!.auth.onAuthStateChange(async (_, session) => {
 			setUser(session?.user ?? null);
 			if (session?.user) {
-				const status = await fetchSubscriptionFromDB(session.user.id);
+				const status = await fetchSubscriptionFromDB(session.user.id, session.user.email || undefined);
 				if (status) setDbSubscriptionStatus(status);
 			} else {
 				setDbSubscriptionStatus(null);
