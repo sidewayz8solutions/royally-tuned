@@ -8,12 +8,29 @@
     <meta name="theme-color" content="#7c3aed" />
     <title>Royally Tuned | Music Rights Management</title>
 
-    <!-- Preconnect for faster font loading -->
+    <!-- Preconnect for faster external resource loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+
+    <!-- Preload critical assets -->
+    <link rel="preload" href="/logo2.png" as="image" />
+    <link rel="preload" href="/crown.svg" as="image" />
 
     <!-- Load fonts with display=swap so text shows immediately -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Inline critical CSS to prevent flash -->
+    <style>
+      body {
+        margin: 0;
+        background: #0a0a0a;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      }
+      #root {
+        min-height: 100vh;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
