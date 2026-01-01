@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { User, Mail, Music, Building, Save, Upload, CheckCircle, Crown, Camera, ImagePlus, X, Palette, Loader2 } from 'lucide-react';
+import { User, Mail, Music, Building, Save, CheckCircle, Crown, Camera, ImagePlus, X, Palette, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { FadeInOnScroll } from '../components/animations';
 import { motion } from 'framer-motion';
@@ -409,19 +409,6 @@ export default function Profile() {
               <button className="w-full py-2 text-sm border border-white/20 rounded-lg text-white/60 hover:bg-white/5 transition-colors">
                 Manage Subscription
               </button>
-            </div>
-
-            {/* Upload Documents */}
-            <div className="glass-card rounded-2xl p-6">
-              <h3 className="font-semibold text-white mb-4">Upload Documents</h3>
-              <p className="text-sm text-white/50 mb-4">
-                Upload photos of forms and we'll extract the data automatically.
-              </p>
-              <label className="flex flex-col items-center gap-2 p-6 border-2 border-dashed border-white/10 rounded-xl cursor-pointer hover:border-royal-500/50 transition-colors">
-                <Upload className="w-8 h-8 text-white/40" />
-                <span className="text-sm text-white/50">Click to upload</span>
-                <input type="file" className="hidden" accept="image/*,.pdf" />
-              </label>
             </div>
 
             {/* Sign Out */}
