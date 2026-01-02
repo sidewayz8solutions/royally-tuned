@@ -1,6 +1,13 @@
 import Stripe from 'stripe';
 import { supabaseAdmin } from './_supabaseAdmin.js';
 
+// Disable Vercel's automatic body parsing - required for Stripe signature verification
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, { apiVersion: '2025-12-15.clover' });
 
 // Map Stripe subscription status to our DB enum values
@@ -66,6 +73,16 @@ async function updateUser(userId: string, fields: Record<string, unknown>) {
   }
 }
 
+// Helper to read raw body from request stream
+async function getRawBody(req: any): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk: Buffer) => chunks.push(chunk));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
@@ -73,15 +90,15 @@ export default async function handler(req: any, res: any) {
   let event: Stripe.Event;
 
   try {
+    // Read raw body for signature verification
+    const rawBody = await getRawBody(req);
+
     if (process.env.STRIPE_WEBHOOK_SECRET && sig) {
-      // Read raw body
-      const chunks: Buffer[] = [];
-      for await (const chunk of req) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-      const rawBody = Buffer.concat(chunks);
       event = stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
     } else {
-      // Fallback (dev) without signature verification
-      event = req.body;
+      // Fallback (dev) without signature verification - parse the raw body as JSON
+      console.warn('stripe-webhook: No webhook secret configured, skipping signature verification');
+      event = JSON.parse(rawBody.toString());
     }
   } catch (err) {
     console.error('Webhook signature verification failed.', err);
