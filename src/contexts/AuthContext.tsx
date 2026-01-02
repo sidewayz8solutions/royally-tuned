@@ -172,17 +172,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	}, [user, dbSubscriptionStatus]);
 
 	// Standard email + password sign-up.
-	// Note: if your Supabase project requires email confirmation,
-	// the user will need to confirm their email before they can log in.
+	// Always sends a new confirmation email, even if user exists but hasn't confirmed.
 	const signUp = async (email: string, password: string) => {
 		try {
 			if (!supabase) return { ok: false, error: 'Auth not configured' };
 
-			const { error } = await supabase.auth.signUp({
+			const { data, error } = await supabase.auth.signUp({
 				email,
 				password,
 			});
-			if (error) return { ok: false, error: error.message };
+
+			// If user already exists but hasn't confirmed, resend confirmation email
+			if (error) {
+				// Check if it's a "user already registered" error
+				if (error.message.toLowerCase().includes('already registered') ||
+				    error.message.toLowerCase().includes('already exists')) {
+					// Try to resend confirmation email
+					const { error: resendError } = await supabase.auth.resend({
+						type: 'signup',
+						email,
+					});
+					if (resendError) {
+						return { ok: false, error: 'This email is already registered. Please log in instead.' };
+					}
+					return { ok: true }; // Resent confirmation email
+				}
+				return { ok: false, error: error.message };
+			}
+
+			// Check if user was created but needs confirmation (identities array is empty for unconfirmed)
+			// Supabase returns the user even if they need to confirm
+			if (data.user && data.user.identities && data.user.identities.length === 0) {
+				// User exists but hasn't confirmed - resend confirmation
+				const { error: resendError } = await supabase.auth.resend({
+					type: 'signup',
+					email,
+				});
+				if (resendError) {
+					return { ok: false, error: 'Could not send confirmation email. Please try again.' };
+				}
+			}
+
 			return { ok: true };
 		} catch (e) {
 			return { ok: false, error: e instanceof Error ? e.message : 'Unknown error' };
