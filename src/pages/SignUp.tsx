@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Crown, Mail, CheckCircle, ArrowRight, Loader2, Lock } from 'lucide-react';
+import { Crown, Mail, CheckCircle, ArrowRight, Loader2, Lock, CreditCard } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'signup' | 'login' }) {
 	const [mode, setMode] = useState<'signup' | 'login'>(defaultMode);
@@ -15,7 +15,12 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 	const [pendingLogin, setPendingLogin] = useState(false);
 	const { signUp, signIn, user, subscriptionStatus } = useAuth();
 	const navigate = useNavigate();
+	const location = useLocation();
 	const redirectAttempted = useRef(false);
+
+	// Check if user just confirmed their email
+	const searchParams = new URLSearchParams(location.search);
+	const justConfirmed = searchParams.get('confirmed') === 'true';
 
 	// Redirect when user becomes logged in after login attempt
 	useEffect(() => {
@@ -117,6 +122,29 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 	return (
 		<div className="min-h-[80vh] flex items-center justify-center px-6 py-24">
 			<div className="max-w-md w-full">
+				{/* Email confirmed banner */}
+				{justConfirmed && (
+					<motion.div
+						initial={{ opacity: 0, y: -20 }}
+						animate={{ opacity: 1, y: 0 }}
+						className="mb-6 p-5 rounded-2xl bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30"
+					>
+						<div className="flex items-center gap-4">
+							<div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center shrink-0">
+								<CheckCircle className="w-6 h-6 text-green-400" />
+							</div>
+							<div>
+								<h3 className="text-lg font-bold text-white">Email Confirmed!</h3>
+								<p className="text-green-300/80 text-sm">Log in below to complete payment and unlock all features</p>
+							</div>
+						</div>
+						<div className="mt-4 flex items-center gap-2 text-green-300">
+							<CreditCard className="w-5 h-5" />
+							<span className="font-medium">You're one step away from your royalties</span>
+						</div>
+					</motion.div>
+				)}
+
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -128,12 +156,14 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 							<Crown className="w-8 h-8 text-gold-400" />
 						</div>
 						<h1 className="text-3xl font-bold text-white mb-2">
-							{mode === 'signup' ? 'Create your account' : 'Welcome back'}
+							{justConfirmed ? 'Log in to pay' : (mode === 'signup' ? 'Create your account' : 'Welcome back')}
 						</h1>
 						<p className="text-white/60">
-							{mode === 'signup'
-								? 'Start claiming your royalties for just $35/month.'
-								: 'Log in to access your dashboard and royalty tools.'}
+							{justConfirmed
+								? 'Enter your password to continue to payment.'
+								: (mode === 'signup'
+									? 'Start claiming your royalties for just $35/month.'
+									: 'Log in to access your dashboard and royalty tools.')}
 						</p>
 					</div>
 

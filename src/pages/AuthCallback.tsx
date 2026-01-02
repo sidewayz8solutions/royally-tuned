@@ -22,38 +22,38 @@ export default function AuthCallback() {
         if (code) {
           // Exchange the code to complete email verification
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-          
+
           if (exchangeError) {
             console.error('Auth callback exchange error:', exchangeError);
             setError(exchangeError.message);
             return;
           }
-          
+
           // Sign out immediately - we want user to login with their password
           await supabase.auth.signOut();
-          
+
           // Clean the URL
           window.history.replaceState({}, document.title, url.pathname);
-          
-          // Show success and redirect to login
+
+          // Show success and redirect to login with confirmed flag
           setMessage('Email verified! Redirecting to login...');
           setTimeout(() => {
-            navigate('/login', { replace: true });
-          }, 2000);
+            navigate('/login?confirmed=true', { replace: true });
+          }, 1500);
           return;
         }
 
         // No code found - check if there's a hash fragment (implicit flow)
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = hashParams.get('access_token');
-        
+
         if (accessToken) {
-          // Implicit flow - sign out and redirect to login
+          // Implicit flow - sign out and redirect to login with confirmed flag
           await supabase.auth.signOut();
           setMessage('Email verified! Redirecting to login...');
           setTimeout(() => {
-            navigate('/login', { replace: true });
-          }, 2000);
+            navigate('/login?confirmed=true', { replace: true });
+          }, 1500);
           return;
         }
 
