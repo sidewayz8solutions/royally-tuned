@@ -1,21 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Crown, Mail, CheckCircle, ArrowRight, Loader2, Lock, CreditCard, Sparkles } from 'lucide-react';
+import { Crown, Mail, CheckCircle, ArrowRight, Loader2, Lock, CreditCard } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'signup' | 'login' }) {
 	const [mode, setMode] = useState<'signup' | 'login'>(defaultMode);
-	const [loginMethod, setLoginMethod] = useState<'password' | 'magiclink'>('password');
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [confirmPassword, setConfirmPassword] = useState('');
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
 	const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
-	const [showMagicLinkSent, setShowMagicLinkSent] = useState(false);
 	const [pendingLogin, setPendingLogin] = useState(false);
-	const { signUp, signIn, signInWithMagicLink, user, subscriptionStatus } = useAuth();
+	const { signUp, signIn, user, subscriptionStatus } = useAuth();
 	const navigate = useNavigate();
 	const location = useLocation();
 	const redirectAttempted = useRef(false);
