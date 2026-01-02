@@ -8,6 +8,7 @@ interface AuthContextValue {
 	subscriptionStatus: string | null;
 	signUp: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
 	signIn: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+	signInWithMagicLink: (email: string) => Promise<{ ok: boolean; error?: string }>;
 	signOut: () => Promise<void>;
 	refreshUser: () => Promise<void>;
 }
@@ -235,12 +236,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		}
 	};
 
+	// Magic link login - sends email with login link
+	const signInWithMagicLink = async (email: string) => {
+		try {
+			if (!supabase) return { ok: false, error: 'Auth not configured' };
+
+			const { error } = await supabase.auth.signInWithOtp({
+				email,
+				options: {
+					emailRedirectTo: `${window.location.origin}/auth/callback?type=magiclink`,
+				},
+			});
+			if (error) return { ok: false, error: error.message };
+			return { ok: true };
+		} catch (e) {
+			return { ok: false, error: e instanceof Error ? e.message : 'Unknown error' };
+		}
+	};
+
 	const signOut = async () => {
 		if (!supabase) return;
 		await supabase.auth.signOut();
 	};
 
-	const value: AuthContextValue = { user, loading, subscriptionStatus, signUp, signIn, signOut, refreshUser };
+	const value: AuthContextValue = { user, loading, subscriptionStatus, signUp, signIn, signInWithMagicLink, signOut, refreshUser };
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
