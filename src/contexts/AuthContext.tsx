@@ -14,34 +14,67 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+// Cache key for subscription status
+const SUBSCRIPTION_CACHE_KEY = 'rt_sub_status';
+const SUBSCRIPTION_CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours - premium users stay premium
+
+// Get cached subscription status
+function getCachedSubscription(): string | null {
+	try {
+		const cached = localStorage.getItem(SUBSCRIPTION_CACHE_KEY);
+		if (!cached) return null;
+		const { status, timestamp } = JSON.parse(cached);
+		if (Date.now() - timestamp > SUBSCRIPTION_CACHE_EXPIRY) {
+			localStorage.removeItem(SUBSCRIPTION_CACHE_KEY);
+			return null;
+		}
+		return status;
+	} catch {
+		return null;
+	}
+}
+
+// Set cached subscription status
+function setCachedSubscription(status: string | null) {
+	if (status) {
+		localStorage.setItem(SUBSCRIPTION_CACHE_KEY, JSON.stringify({ status, timestamp: Date.now() }));
+	} else {
+		localStorage.removeItem(SUBSCRIPTION_CACHE_KEY);
+	}
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+	// Initialize with cached values for instant render
 	const [user, setUser] = useState<User | null>(null);
 	const [loading, setLoading] = useState(true);
-	const [dbSubscriptionStatus, setDbSubscriptionStatus] = useState<string | null>(null);
+	const [dbSubscriptionStatus, setDbSubscriptionStatus] = useState<string | null>(() => getCachedSubscription());
 
 	// Verify subscription with backend API (checks Stripe and updates profile)
 	const verifySubscriptionWithAPI = useCallback(async (userId: string): Promise<string | null> => {
 		try {
+			const controller = new AbortController();
+			const timeout = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
 			const response = await fetch('/api/verify-subscription', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ userId }),
+				signal: controller.signal,
 			});
+			clearTimeout(timeout);
+
 			if (response.ok) {
 				const data = await response.json();
-				console.log('Subscription verified via API:', data);
 				return data.status || null;
 			}
 		} catch (e) {
-			console.warn('Failed to verify subscription via API:', e);
+			// Silently fail - don't block on API errors
 		}
 		return null;
 	}, []);
 
-	// Fetch subscription status from profiles table (source of truth)
-	// Only verify with API on explicit refresh, not on initial load
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const fetchSubscriptionFromDB = useCallback(async (userId: string, _userEmail?: string, forceAPICheck = false) => {
+	// Fetch subscription status from profiles table - fast, no API call
+	const fetchSubscriptionFromDB = useCallback(async (userId: string, forceAPICheck = false) => {
 		if (!supabase) return null;
 		try {
 			const { data, error } = await supabase
@@ -51,43 +84,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				.single();
 
 			if (error) {
-				// If profile doesn't exist (PGRST116 = no rows), only verify with API if forced
+				// Only call API if forced and profile doesn't exist
 				if (error.code === 'PGRST116' && forceAPICheck) {
-					console.log('Profile not found, verifying with API...');
 					return await verifySubscriptionWithAPI(userId);
 				}
 				return null;
 			}
 
-			// Only call API if forced (e.g., after checkout success)
 			const status = data?.subscription_status;
+
+			// Only call API if explicitly forced (after checkout)
 			if (forceAPICheck && (!status || status === 'free')) {
-				console.log('Force checking API for status update...');
 				const apiStatus = await verifySubscriptionWithAPI(userId);
 				if (apiStatus && apiStatus !== 'free') {
+					setCachedSubscription(apiStatus);
 					return apiStatus;
 				}
 			}
 
+			if (status) setCachedSubscription(status);
 			return status || null;
-		} catch (e) {
-			console.warn('Failed to fetch subscription:', e);
+		} catch {
 			return null;
 		}
 	}, [verifySubscriptionWithAPI]);
 
 	const refreshUser = useCallback(async () => {
 		if (!supabase || !user) return;
-		// Force API check when explicitly refreshing (e.g., after checkout)
-		const status = await fetchSubscriptionFromDB(user.id, user.email || undefined, true);
-		if (status) {
-			setDbSubscriptionStatus(status);
-		}
-		// Also try to refresh the session
+		const status = await fetchSubscriptionFromDB(user.id, true);
+		if (status) setDbSubscriptionStatus(status);
 		const { data } = await supabase.auth.refreshSession();
-		if (data.user) {
-			setUser(data.user);
-		}
+		if (data.user) setUser(data.user);
 	}, [user, fetchSubscriptionFromDB]);
 
 	useEffect(() => {
@@ -96,52 +123,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			return;
 		}
 		let isMounted = true;
-		// Failsafe: never stay in loading state forever
-		const loadingTimeout = setTimeout(() => {
-			if (isMounted) setLoading(false);
-		}, 3000);
 
 		const init = async () => {
 			try {
-				const { data } = await supabase!.auth.getUser();
+				// Use getSession() - much faster than getUser() as it uses cached session
+				const { data: { session } } = await supabase!.auth.getSession();
 				if (!isMounted) return;
-				setUser(data.user ?? null);
-				// Also fetch DB subscription status (don't block on failure)
-				// Pass email for profile creation fallback if profile doesn't exist
-				if (data.user) {
-					fetchSubscriptionFromDB(data.user.id, data.user.email || undefined).then(status => {
+
+				setUser(session?.user ?? null);
+				setLoading(false); // Set loading false IMMEDIATELY after getting session
+
+				// Fetch subscription status in background (non-blocking)
+				if (session?.user) {
+					fetchSubscriptionFromDB(session.user.id).then(status => {
 						if (status && isMounted) setDbSubscriptionStatus(status);
 					});
 				}
-			} catch (e) {
-				console.warn('Init auth load failed', e);
-			} finally {
+			} catch {
 				if (isMounted) setLoading(false);
 			}
 		};
 		init();
 
-		const { data: sub } = supabase!.auth.onAuthStateChange(async (_, session) => {
+		const { data: sub } = supabase.auth.onAuthStateChange(async (_, session) => {
 			setUser(session?.user ?? null);
 			if (session?.user) {
-				const status = await fetchSubscriptionFromDB(session.user.id, session.user.email || undefined);
-				if (status) setDbSubscriptionStatus(status);
+				// Background fetch - don't await
+				fetchSubscriptionFromDB(session.user.id).then(status => {
+					if (status) setDbSubscriptionStatus(status);
+				});
 			} else {
 				setDbSubscriptionStatus(null);
+				setCachedSubscription(null);
 			}
 		});
+
 		return () => {
 			isMounted = false;
 			sub.subscription?.unsubscribe();
-			clearTimeout(loadingTimeout);
 		};
 	}, [fetchSubscriptionFromDB]);
 
-	// Combine app_metadata status with DB status - DB takes priority
+	// Combine cached/DB status with app_metadata
 	const subscriptionStatus = useMemo(() => {
-		// First check DB status (most up-to-date)
 		if (dbSubscriptionStatus) return dbSubscriptionStatus;
-		// Fallback to app_metadata
 		const meta = (user?.app_metadata || {}) as Record<string, unknown>;
 		return (meta['subscription_status'] as string) || null;
 	}, [user, dbSubscriptionStatus]);
