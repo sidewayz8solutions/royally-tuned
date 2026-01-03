@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import SyncChecklist from '../components/SyncChecklist';
+import SyncPackage from '../components/SyncPackage';
 import WriterPublisherInput from '../components/WriterPublisherInput';
 import type {
   WriterDetailed, PublisherDetailed, SyncChecklist as SyncChecklistType,
@@ -151,6 +152,88 @@ export default function TrackDetail() {
       sync_checklist: { ...track.sync_checklist, [key]: value },
     });
   };
+
+  // Handle file upload to Supabase Storage
+  const handleFileUpload = useCallback(async (fileType: string, file: File): Promise<string | null> => {
+    if (!supabase || !user || !track) return null;
+
+    const filename = {
+      mp3: 'master.mp3',
+      master_wav: 'master.wav',
+      acapella_wav: 'acapella.wav',
+      instrumental_wav: 'instrumental.wav',
+      splits_sheet: 'splits-sheet.pdf',
+      one_stop: 'one-stop-auth.pdf',
+    }[fileType];
+
+    if (!filename) return null;
+
+    const storagePath = `${user.id}/${track.id}/${filename}`;
+
+    try {
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('sync-files')
+        .upload(storagePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('sync-files')
+        .getPublicUrl(storagePath);
+
+      const publicUrl = urlData.publicUrl;
+
+      // Update local state
+      const fileKey = `${fileType}_url` as keyof SyncFiles;
+      const checklistKey = `${fileType}_ready` as keyof SyncChecklistType;
+
+      setTrack(prev => prev ? {
+        ...prev,
+        sync_files: { ...prev.sync_files, [fileKey]: publicUrl },
+        sync_checklist: { ...prev.sync_checklist, [checklistKey]: true },
+      } : null);
+
+      return publicUrl;
+    } catch (err) {
+      console.error('Upload failed:', err);
+      return null;
+    }
+  }, [user, track]);
+
+  // Handle file deletion
+  const handleFileDelete = useCallback(async (fileType: string): Promise<void> => {
+    if (!supabase || !user || !track) return;
+
+    const filename = {
+      mp3: 'master.mp3',
+      master_wav: 'master.wav',
+      acapella_wav: 'acapella.wav',
+      instrumental_wav: 'instrumental.wav',
+      splits_sheet: 'splits-sheet.pdf',
+      one_stop: 'one-stop-auth.pdf',
+    }[fileType];
+
+    if (!filename) return;
+
+    const storagePath = `${user.id}/${track.id}/${filename}`;
+
+    try {
+      await supabase.storage.from('sync-files').remove([storagePath]);
+
+      const fileKey = `${fileType}_url` as keyof SyncFiles;
+      const checklistKey = `${fileType}_ready` as keyof SyncChecklistType;
+
+      setTrack(prev => prev ? {
+        ...prev,
+        sync_files: { ...prev.sync_files, [fileKey]: null },
+        sync_checklist: { ...prev.sync_checklist, [checklistKey]: false },
+      } : null);
+    } catch (err) {
+      console.error('Delete failed:', err);
+    }
+  }, [user, track]);
 
   if (loading) {
     return (
@@ -316,11 +399,28 @@ export default function TrackDetail() {
           />
         </motion.section>
 
-        {/* Sync Checklist Section */}
+        {/* Sync Package Section - File Uploads */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
+          className="glass-card rounded-2xl p-6"
+        >
+          <SyncPackage
+            trackId={track.id}
+            trackTitle={track.title}
+            files={track.sync_files}
+            checklist={track.sync_checklist}
+            onFileUpload={handleFileUpload}
+            onFileDelete={handleFileDelete}
+          />
+        </motion.section>
+
+        {/* Sync Checklist Overview */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
           className="glass-card rounded-2xl p-6"
         >
           <SyncChecklist
