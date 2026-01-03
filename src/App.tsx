@@ -22,6 +22,7 @@ const Checklist = lazy(() => import('./pages/Checklist'));
 const Toolkit = lazy(() => import('./pages/Toolkit'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Registrations = lazy(() => import('./pages/Registrations'));
+const TrackDetail = lazy(() => import('./pages/TrackDetail'));
 
 // Loading spinner component
 const PageLoader = () => (
@@ -97,6 +98,7 @@ export default function App() {
           <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
             <Route path="/app" element={<Dashboard />} />
             <Route path="/app/tracks" element={<Tracks />} />
+            <Route path="/app/tracks/:id" element={<TrackDetail />} />
             <Route path="/app/checklist" element={<Checklist />} />
             <Route path="/app/toolkit" element={<Toolkit />} />
             <Route path="/app/registrations" element={<Registrations />} />

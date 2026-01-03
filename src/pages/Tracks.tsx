@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Music, Plus, MoreVertical, Play, DollarSign, CheckCircle, AlertCircle, Search, Loader2 } from 'lucide-react';
+import { Music, Plus, Play, DollarSign, CheckCircle, AlertCircle, Search, Loader2, ChevronRight } from 'lucide-react';
 import { FadeInOnScroll, StaggerContainer, StaggerItem } from '../components/animations';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
@@ -21,6 +22,7 @@ interface Track {
 
 export default function Tracks() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -190,8 +192,11 @@ export default function Tracks() {
       <StaggerContainer className="space-y-3">
         {filteredTracks.map((track) => (
           <StaggerItem key={track.id}>
-            <div className="glass-card rounded-xl p-4 flex items-center gap-4 hover:border-royal-500/30 transition-colors group">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-royal-600/30 to-gold-500/20 flex items-center justify-center flex-shrink-0">
+            <div
+              onClick={() => navigate(`/app/tracks/${track.id}`)}
+              className="glass-card rounded-xl p-4 flex items-center gap-4 hover:border-royal-500/30 transition-colors group cursor-pointer"
+            >
+              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-royal-600/30 to-gold-500/20 flex items-center justify-center shrink-0">
                 <Music className="w-6 h-6 text-royal-500" />
               </div>
 
@@ -199,9 +204,9 @@ export default function Tracks() {
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold text-white truncate">{track.title}</h3>
                   {isComplete(track.registration_status) ? (
-                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
                   ) : (
-                    <AlertCircle className="w-4 h-4 text-gold-400 flex-shrink-0" />
+                    <AlertCircle className="w-4 h-4 text-gold-400 shrink-0" />
                   )}
                 </div>
                 <p className="text-sm text-white/50">{track.isrc ? `ISRC: ${track.isrc}` : 'No ISRC'}</p>
@@ -212,8 +217,8 @@ export default function Tracks() {
                   <div className="flex items-center gap-1 text-white/60">
                     <Play className="w-4 h-4" />
                     <span className="text-sm">
-                      {track.total_streams >= 1000 
-                        ? `${(track.total_streams / 1000).toFixed(1)}K` 
+                      {track.total_streams >= 1000
+                        ? `${(track.total_streams / 1000).toFixed(1)}K`
                         : track.total_streams}
                     </span>
                   </div>
@@ -228,9 +233,7 @@ export default function Tracks() {
                 </div>
               </div>
 
-              <button className="p-2 text-white/40 hover:text-white transition-colors opacity-0 group-hover:opacity-100">
-                <MoreVertical className="w-5 h-5" />
-              </button>
+              <ChevronRight className="w-5 h-5 text-white/30 group-hover:text-white/60 transition-colors" />
             </div>
           </StaggerItem>
         ))}
