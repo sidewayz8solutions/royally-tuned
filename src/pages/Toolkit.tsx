@@ -182,7 +182,7 @@ export default function Toolkit() {
     { name: 'ASCAP Member Application', type: 'PRO' },
     { name: 'MLC Registration Form', type: 'Mechanical' },
     { name: 'SoundExchange Artist Form', type: 'Neighboring' },
-    { name: 'Copyright Registration (PA)', type: 'Copyright' },
+    { name: 'Copyright Registration (PA)', type: 'Copyright', external_link: 'https://www.copyright.gov/forms/sr.pdf' },
     { name: 'TV Music Rights License', type: 'Legal' },
     { name: 'Co-Production Agreement', type: 'Legal' },
   ];
@@ -432,9 +432,20 @@ export default function Toolkit() {
                     >
                       Open
                     </button>
-                    <button className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors">
-                      <Download className="w-5 h-5" />
-                    </button>
+                    {form.external_link ? (
+                      <a
+                        href={form.external_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+                      >
+                        <Download className="w-5 h-5" />
+                      </a>
+                    ) : (
+                      <button className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors">
+                        <Download className="w-5 h-5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </TiltCard>
