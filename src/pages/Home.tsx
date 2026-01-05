@@ -328,10 +328,10 @@ export default function Home() {
               </a>
             </StaggerItem>
 
-            {/* The Great Sage TikTok */}
+            {/* Featured TikTok: Culture Syndicate.live */}
             <StaggerItem>
               <a
-                href="https://www.tiktok.com/@thegreatsage76"
+                href="https://www.tiktok.com/@culturesyndicate.live"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block glass-card rounded-2xl p-6 hover:border-pink-400/40 transition-all group h-full"
@@ -342,52 +342,41 @@ export default function Home() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-white group-hover:text-pink-300 transition-colors flex items-center gap-2">
-                      @thegreatsage76
+                      Culture Syndicate.live
                       <ExternalLink className="w-4 h-4 text-white/40" />
                     </h3>
                     <span className="text-xs text-pink-400 uppercase tracking-wide">TikTok Creator</span>
                   </div>
                 </div>
                 <p className="text-white/60 text-sm">
-                  Music industry insights and tips from The Great Sage.
-                  Follow for knowledge that'll level up your career.
+                  Music industry insights, tips, and creative promotion from Culture Syndicate.live.
+                  Follow for content to level up your career.
                 </p>
               </a>
             </StaggerItem>
 
-            {/* Musa & Kaya Show */}
+            {/* Combined partner — link to same TikTok */}
             <StaggerItem>
               <a
-                href="https://www.youtube.com/@TheMusaKayaShow"
+                href="https://www.tiktok.com/@culturesyndicate.live"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block glass-card rounded-2xl p-6 hover:border-cyan-400/40 transition-all group h-full"
+                className="block glass-card rounded-2xl p-6 hover:border-pink-400/40 transition-all group h-full"
               >
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-14 h-14 rounded-xl overflow-hidden bg-gradient-to-br from-blue-600 to-red-500 flex items-center justify-center">
-                    <img
-                      src="/musa-kaya-show.png"
-                      alt="The Musa & Kaya Show"
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.parentElement?.classList.add('items-center', 'justify-center');
-                        const icon = document.createElement('span');
-                        icon.innerHTML = '<svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>';
-                      }}
-                    />
+                  <div className="w-14 h-14 rounded-xl bg-pink-600/20 flex items-center justify-center">
+                    <TikTokIcon className="w-7 h-7 text-pink-400" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-white group-hover:text-cyan-300 transition-colors flex items-center gap-2">
-                      Musa & Kaya Show
+                    <h3 className="text-lg font-semibold text-white group-hover:text-pink-300 transition-colors flex items-center gap-2">
+                      Culture Syndicate.live
                       <ExternalLink className="w-4 h-4 text-white/40" />
                     </h3>
-                    <span className="text-xs text-cyan-400 uppercase tracking-wide">Podcast / Show</span>
+                    <span className="text-xs text-pink-400 uppercase tracking-wide">TikTok Creator</span>
                   </div>
                 </div>
                 <p className="text-white/60 text-sm">
-                  Interviews, insights, and real talk about the music industry.
-                  Tune in for inspiration and industry knowledge.
+                  Music promotion and industry insights from Culture Syndicate.live—your go-to creator for tips and growth.
                 </p>
               </a>
             </StaggerItem>
