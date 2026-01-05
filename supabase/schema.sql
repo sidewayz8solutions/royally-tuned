@@ -827,6 +827,11 @@ INSERT INTO default_checklist_items (title, description, category, sort_order, e
 ('Register with international PROs', 'Register your works with international collecting societies', 'optimization', 12, NULL, 'This ensures you collect royalties from international performances'),
 ('Set up sync licensing', 'Make your music available for TV, film, and ads', 'optimization', 13, NULL, 'Platforms like Musicbed, Artlist, and Epidemic Sound offer sync opportunities');
 
+-- Copyright registration seeds
+INSERT INTO default_checklist_items (title, description, category, sort_order, external_link, help_text) VALUES
+('Copyright Registration (PA)', 'Register your musical composition with the US Copyright Office using the PA (Performing Arts) form', 'registration', 14, 'https://www.copyright.gov/forms/pa.pdf', 'Register the composition (PA) to protect the written musical work and lyrics'),
+('Copyright Registration (SR)', 'Register your sound recording (master) with the US Copyright Office using the SR form', 'registration', 15, 'https://www.copyright.gov/forms/sr.pdf', 'Register the sound recording (SR) to protect the master recording');
+
 -- ============================================================
 -- VIEWS (Optional - for convenient querying)
 -- ============================================================
