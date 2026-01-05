@@ -309,6 +309,22 @@ CREATE INDEX idx_notifications_user ON notifications(user_id);
 CREATE INDEX idx_notifications_unread ON notifications(user_id, read) WHERE read = FALSE;
 
 -- ============================================================
+-- SPOTIFY TOKENS TABLE
+-- Stores OAuth tokens for users who connect their Spotify accounts
+-- ============================================================
+CREATE TABLE IF NOT EXISTS spotify_tokens (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    access_token TEXT NOT NULL,
+    refresh_token TEXT,
+    scope TEXT,
+    expires_at BIGINT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_spotify_tokens_user ON spotify_tokens(user_id);
+
+-- ============================================================
 -- ACTIVITY LOG TABLE
 -- Tracks user activity for dashboard insights
 -- ============================================================
