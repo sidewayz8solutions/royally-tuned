@@ -44,6 +44,8 @@ export function ArtistProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
+      console.log('[ArtistContext] Fetching artists for user:', user.id);
+
       const { data, error } = await supabase
         .from('artist_managers')
         .select(`
@@ -80,8 +82,10 @@ export function ArtistProvider({ children }: { children: React.ReactNode }) {
         .eq('user_id', user.id)
         .order('created_at', { ascending: true });
 
+      console.log('[ArtistContext] Query result:', { data, error });
+
       if (error) {
-        console.error('Error fetching managed artists:', error);
+        console.error('[ArtistContext] Error fetching managed artists:', error);
         setManagedArtists([]);
         return;
       }
@@ -121,21 +125,26 @@ export function ArtistProvider({ children }: { children: React.ReactNode }) {
           };
         });
 
+      console.log('[ArtistContext] Processed artists:', artists);
       setManagedArtists(artists);
 
       // Auto-select first artist if none selected or selected artist no longer exists
       if (artists.length > 0) {
         const currentlySelected = selectedArtistId && artists.find(a => a.id === selectedArtistId);
         if (!currentlySelected) {
+          console.log('[ArtistContext] Auto-selecting first artist:', artists[0].id);
           setSelectedArtistId(artists[0].id);
           localStorage.setItem(SELECTED_ARTIST_KEY, artists[0].id);
+        } else {
+          console.log('[ArtistContext] Artist already selected:', currentlySelected.id);
         }
       } else {
+        console.log('[ArtistContext] No artists found, clearing selection');
         setSelectedArtistId(null);
         localStorage.removeItem(SELECTED_ARTIST_KEY);
       }
     } catch (err) {
-      console.error('Error in fetchManagedArtists:', err);
+      console.error('[ArtistContext] Error in fetchManagedArtists:', err);
       setManagedArtists([]);
     } finally {
       setLoading(false);
