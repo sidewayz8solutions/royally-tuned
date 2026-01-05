@@ -426,12 +426,23 @@ export default function Toolkit() {
                     <p className="text-sm text-white/50">{form.type}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => navigate(`/app/forms/${form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`)}
-                      className="px-3 py-2 rounded-md bg-white/5 text-white/70 hover:bg-white/10"
-                    >
-                      Open
-                    </button>
+                    {form.external_link ? (
+                      <a
+                        href={form.external_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-2 rounded-md bg-white/5 text-white/70 hover:bg-white/10 text-center"
+                      >
+                        Open
+                      </a>
+                    ) : (
+                      <button
+                        onClick={() => navigate(`/app/forms/${form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`)}
+                        className="px-3 py-2 rounded-md bg-white/5 text-white/70 hover:bg-white/10"
+                      >
+                        Open
+                      </button>
+                    )}
                     {form.external_link ? (
                       <a
                         href={form.external_link}
