@@ -166,7 +166,9 @@ export function AppNav() {
             </Link>
 
             {/* Artist Selector - shows only if user manages multiple artists */}
-            <ArtistSelector />
+            <div className="ml-[4%]">
+              <ArtistSelector />
+            </div>
           </div>
 
           <div className="flex items-center gap-6">
