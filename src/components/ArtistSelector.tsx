@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useArtist } from '../contexts/ArtistContext';
-import { ChevronDown, Plus, User } from 'lucide-react';
+import { ChevronDown, Plus } from 'lucide-react';
 
 export default function ArtistSelector() {
   const { selectedArtist, managedArtists, selectArtist, createArtist } = useArtist();

@@ -88,34 +88,38 @@ export function ArtistProvider({ children }: { children: React.ReactNode }) {
 
       const artists: ManagedArtist[] = (data || [])
         .filter(item => item.artists)
-        .map(item => ({
-          id: item.artists.id,
-          artistName: item.artists.artist_name,
-          legalName: item.artists.legal_name,
-          bio: item.artists.bio,
-          ipiNumber: item.artists.ipi_number,
-          isniNumber: item.artists.isni_number,
-          proAffiliation: item.artists.pro_affiliation,
-          publisherName: item.artists.publisher_name,
-          profileColor: item.artists.profile_color,
-          backgroundOption: item.artists.background_option,
-          customBackgroundUrl: item.artists.custom_background_url,
-          profileImageUrl: item.artists.profile_image_url,
-          bannerImageUrl: item.artists.banner_image_url,
-          galleryImages: item.artists.gallery_images,
-          website: item.artists.website,
-          instagram: item.artists.instagram,
-          spotify: item.artists.spotify,
-          twitter: item.artists.twitter,
-          youtube: item.artists.youtube,
-          tiktok: item.artists.tiktok,
-          soundcloud: item.artists.soundcloud,
-          appleMusic: item.artists.apple_music,
-          isActive: item.artists.is_active,
-          createdAt: item.artists.created_at,
-          updatedAt: item.artists.updated_at,
-          managerRole: item.role as 'owner' | 'manager' | 'viewer',
-        }));
+        .map(item => {
+          // Supabase returns nested objects, handle both array and object cases
+          const artist = Array.isArray(item.artists) ? item.artists[0] : item.artists;
+          return {
+            id: artist.id,
+            artistName: artist.artist_name,
+            legalName: artist.legal_name,
+            bio: artist.bio,
+            ipiNumber: artist.ipi_number,
+            isniNumber: artist.isni_number,
+            proAffiliation: artist.pro_affiliation,
+            publisherName: artist.publisher_name,
+            profileColor: artist.profile_color,
+            backgroundOption: artist.background_option,
+            customBackgroundUrl: artist.custom_background_url,
+            profileImageUrl: artist.profile_image_url,
+            bannerImageUrl: artist.banner_image_url,
+            galleryImages: artist.gallery_images,
+            website: artist.website,
+            instagram: artist.instagram,
+            spotify: artist.spotify,
+            twitter: artist.twitter,
+            youtube: artist.youtube,
+            tiktok: artist.tiktok,
+            soundcloud: artist.soundcloud,
+            appleMusic: artist.apple_music,
+            isActive: artist.is_active,
+            createdAt: artist.created_at,
+            updatedAt: artist.updated_at,
+            managerRole: item.role as 'owner' | 'manager' | 'viewer',
+          };
+        });
 
       setManagedArtists(artists);
 
