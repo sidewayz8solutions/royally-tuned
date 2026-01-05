@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import {
   Crown, ArrowRight, DollarSign, FileText, BarChart3,
   CheckCircle, Music, Shield, Zap, TrendingUp, Users, Lock,
-  ExternalLink, Radio, Mic2
+  ExternalLink
 } from 'lucide-react';
 import { FadeInOnScroll, StaggerContainer, StaggerItem, Parallax, Float, TiltCard } from '../components/animations';
 
