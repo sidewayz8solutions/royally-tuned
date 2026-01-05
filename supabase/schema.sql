@@ -803,6 +803,8 @@ INSERT INTO default_checklist_items (title, description, category, sort_order, e
 ('Verify Spotify for Artists', 'Claim your artist profile on Spotify', 'verification', 8, 'https://artists.spotify.com/', 'Verification gives you access to analytics and profile customization'),
 ('Verify Apple Music for Artists', 'Claim your artist profile on Apple Music', 'verification', 9, 'https://artists.apple.com/', 'Access to analytics and promotional tools'),
 ('Verify YouTube Official Artist Channel', 'Set up your Official Artist Channel on YouTube', 'verification', 10, NULL, 'Consolidates your music across YouTube and YouTube Music'),
+('Create TV Music Rights License', 'Prepare a TV music rights license to clear sync and television uses', 'verification', 11, NULL, 'Use this to license recordings for TV/film sync usages'),
+('Prepare Co-Production Agreement', 'Draft and save a co-production agreement for collaborations and joint projects', 'verification', 12, NULL, 'Protects partner rights and revenue splits for co-productions'),
 
 -- Optimization Items
 ('Set up publishing admin', 'Consider a publishing administrator to collect global royalties', 'optimization', 11, NULL, 'Publishing admins like Songtrust or CD Baby Pro help collect international royalties'),

@@ -20,6 +20,7 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Tracks = lazy(() => import('./pages/Tracks'));
 const Checklist = lazy(() => import('./pages/Checklist'));
 const Toolkit = lazy(() => import('./pages/Toolkit'));
+const FormEditor = lazy(() => import('./pages/FormEditor'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Registrations = lazy(() => import('./pages/Registrations'));
 const TrackDetail = lazy(() => import('./pages/TrackDetail'));
@@ -101,6 +102,7 @@ export default function App() {
             <Route path="/app/tracks/:id" element={<TrackDetail />} />
             <Route path="/app/checklist" element={<Checklist />} />
             <Route path="/app/toolkit" element={<Toolkit />} />
+            <Route path="/app/forms/:slug" element={<FormEditor />} />
             <Route path="/app/registrations" element={<Registrations />} />
             <Route path="/app/profile" element={<Profile />} />
           </Route>

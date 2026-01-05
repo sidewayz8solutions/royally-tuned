@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calculator, FileText, Download, TrendingUp, Music, Radio, Disc } from 'lucide-react';
 import { FadeInOnScroll, StaggerContainer, StaggerItem, TiltCard } from '../components/animations';
+import { useNavigate } from 'react-router-dom';
 
 // Royalty rates (approximate industry averages)
 const RATES = {
@@ -13,6 +14,7 @@ const RATES = {
 export default function Toolkit() {
   const [streams, setStreams] = useState(100000);
   const [activeTab, setActiveTab] = useState<'calculator' | 'forms'>('calculator');
+  const navigate = useNavigate();
 
   const earnings = {
     performance: streams * RATES.performance,
@@ -27,6 +29,8 @@ export default function Toolkit() {
     { name: 'MLC Registration Form', type: 'Mechanical', status: 'ready' },
     { name: 'SoundExchange Artist Form', type: 'Neighboring', status: 'ready' },
     { name: 'Copyright Registration (PA)', type: 'Copyright', status: 'ready' },
+    { name: 'TV Music Rights License', type: 'Legal', status: 'ready' },
+    { name: 'Co-Production Agreement', type: 'Legal', status: 'ready' },
   ];
 
   return (
@@ -147,9 +151,17 @@ export default function Toolkit() {
                     <h3 className="font-semibold text-white">{form.name}</h3>
                     <p className="text-sm text-white/50">{form.type}</p>
                   </div>
-                  <button className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors">
-                    <Download className="w-5 h-5" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => navigate(`/app/forms/${form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`)}
+                      className="px-3 py-2 rounded-md bg-white/5 text-white/70 hover:bg-white/10"
+                    >
+                      Open
+                    </button>
+                    <button className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors">
+                      <Download className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
               </TiltCard>
             </StaggerItem>

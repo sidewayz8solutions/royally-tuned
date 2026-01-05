@@ -38,6 +38,9 @@ const defaultItems: Omit<ChecklistItem, 'id'>[] = [
   { title: 'Claim your songs in MLC database', description: 'Match your songs to collect mechanical royalties', category: 'setup', completed: false, external_link: null, sort_order: 2 },
   { title: 'Register with SoundExchange', description: 'Required for US digital radio royalties', category: 'verification', completed: false, external_link: 'https://soundexchange.com', sort_order: 1 },
   { title: 'Register your recordings with SoundExchange', description: 'Submit ISRCs and recording information', category: 'verification', completed: false, external_link: null, sort_order: 2 },
+  // Legal / Sync forms
+  { title: 'Create TV Music Rights License', description: 'Prepare a TV music rights license to clear sync/TV uses', category: 'verification', completed: false, external_link: '/app/forms/tv-music-rights-license', sort_order: 3 },
+  { title: 'Prepare Co-Production Agreement', description: 'Create and save a co-production agreement for collaborations', category: 'verification', completed: false, external_link: '/app/forms/co-production-agreement', sort_order: 4 },
   { title: 'Choose a distributor', description: 'Select from DistroKid, TuneCore, CD Baby, etc.', category: 'distribution', completed: false, external_link: null, sort_order: 1 },
   { title: 'Upload your catalog', description: 'Distribute all your music to streaming platforms', category: 'distribution', completed: false, external_link: null, sort_order: 2 },
 ];
