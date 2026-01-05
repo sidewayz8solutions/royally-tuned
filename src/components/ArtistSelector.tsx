@@ -44,7 +44,7 @@ export default function ArtistSelector() {
       {/* Selected Artist Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors min-w-[180px]"
       >
         {selectedArtist?.profileImageUrl ? (
           <img
@@ -60,7 +60,7 @@ export default function ArtistSelector() {
             {selectedArtist?.artistName?.charAt(0).toUpperCase() || 'A'}
           </div>
         )}
-        <span className="font-medium text-gray-900 dark:text-white">
+        <span className="font-medium text-gray-900 dark:text-white whitespace-nowrap">
           {selectedArtist?.artistName || 'Select Artist'}
         </span>
         <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
