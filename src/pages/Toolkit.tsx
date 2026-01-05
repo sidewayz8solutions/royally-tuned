@@ -23,6 +23,12 @@ export default function Toolkit() {
     total: streams * (RATES.performance + RATES.mechanical + RATES.neighboring),
   };
 
+  const formatStreamsDisplay = (n: number) => {
+    if (n >= 1000000) return `${(n / 1000000).toFixed(0)}M`;
+    if (n >= 1000) return `${(n / 1000).toLocaleString()}K`;
+    return n.toString();
+  };
+
   const forms = [
     { name: 'BMI Songwriter Application', type: 'PRO', status: 'ready' },
     { name: 'ASCAP Member Application', type: 'PRO', status: 'ready' },
@@ -85,7 +91,7 @@ export default function Toolkit() {
                 />
                 <div className="flex justify-between mt-2">
                   <span className="text-xs text-white/40">1K</span>
-                  <span className="text-2xl font-bold text-green-400">{(streams / 1000).toLocaleString()}K</span>
+                  <span className="text-2xl font-bold text-green-400">{formatStreamsDisplay(streams)}</span>
                   <span className="text-xs text-white/40">1M</span>
                 </div>
               </div>
