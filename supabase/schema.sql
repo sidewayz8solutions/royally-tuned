@@ -830,7 +830,8 @@ INSERT INTO default_checklist_items (title, description, category, sort_order, e
 -- Copyright registration seeds
 INSERT INTO default_checklist_items (title, description, category, sort_order, external_link, help_text) VALUES
 ('Copyright Registration (PA)', 'Register your musical composition with the US Copyright Office using the PA (Performing Arts) form', 'registration', 14, 'https://www.copyright.gov/forms/pa.pdf', 'Register the composition (PA) to protect the written musical work and lyrics'),
-('Copyright Registration (SR)', 'Register your sound recording (master) with the US Copyright Office using the SR form', 'registration', 15, 'https://www.copyright.gov/forms/sr.pdf', 'Register the sound recording (SR) to protect the master recording');
+('Copyright Registration (SR)', 'Register your sound recording (master) with the US Copyright Office using the SR form', 'registration', 15, 'https://www.copyright.gov/forms/sr.pdf', 'Register the sound recording (SR) to protect the master recording'),
+('Song Title Registration (LuminateData)', 'Register your song title/metadata with Luminate Data to improve tracking and reporting', 'registration', 16, 'https://luminatedata.com/song-title-registration/', 'Register song title metadata with LuminateData to help ensure accurate tracking and attribution');
 
 -- ============================================================
 -- VIEWS (Optional - for convenient querying)

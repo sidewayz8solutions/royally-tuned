@@ -182,9 +182,11 @@ export default function Toolkit() {
     { name: 'ASCAP Member Application', type: 'PRO' },
     { name: 'MLC Registration Form', type: 'Mechanical' },
     { name: 'SoundExchange Artist Form', type: 'Neighboring' },
-    // Copyright forms: PA = Performing Arts (composition), SR = Sound Recording (master)
-    { name: 'Copyright Registration (PA)', type: 'Copyright', external_link: 'https://www.copyright.gov/forms/pa.pdf' },
-    { name: 'Copyright Registration (SR)', type: 'Copyright', external_link: 'https://www.copyright.gov/forms/sr.pdf' },
+  // Copyright forms: PA = Performing Arts (composition), SR = Sound Recording (master)
+  { name: 'Copyright Registration (PA)', type: 'Copyright', external_link: 'https://www.copyright.gov/forms/pa.pdf' },
+  { name: 'Copyright Registration (SR)', type: 'Copyright', external_link: 'https://www.copyright.gov/forms/sr.pdf' },
+  // External registration: Song title registration via Luminate Data
+  { name: 'Song Title Registration (LuminateData)', type: 'Registration', external_link: 'https://luminatedata.com/song-title-registration/' },
     { name: 'TV Music Rights License', type: 'Legal' },
     { name: 'Co-Production Agreement', type: 'Legal' },
   ];
