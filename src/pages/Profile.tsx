@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { User, Mail, Music, Building, Save, CheckCircle, Crown, Camera, ImagePlus, X, Palette, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useArtist } from '../contexts/ArtistContext';
 import { FadeInOnScroll } from '../components/animations';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
@@ -25,6 +26,7 @@ const backgroundOptions = [
 
 export default function Profile() {
   const { user, signOut } = useAuth();
+  const { selectedArtist, updateArtist } = useArtist();
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -50,27 +52,27 @@ export default function Profile() {
     spotify: '',
   });
 
-  // Load profile data on mount
+  // Load artist profile data on mount
   useEffect(() => {
     const loadProfile = async () => {
-      if (!supabase || !user?.id) {
+      if (!supabase || !selectedArtist?.id) {
         setLoading(false);
         return;
       }
       try {
         const { data, error } = await supabase
-          .from('profiles')
+          .from('artists')
           .select('*')
-          .eq('id', user.id)
+          .eq('id', selectedArtist.id)
           .single();
 
         if (error) {
-          console.error('Error loading profile:', error);
+          console.error('Error loading artist profile:', error);
         } else if (data) {
           setFormData({
             artistName: data.artist_name || '',
             legalName: data.legal_name || '',
-            email: data.email || user?.email || '',
+            email: user?.email || '',
             ipiNumber: data.ipi_number || '',
             proAffiliation: data.pro_affiliation || '',
             publisherName: data.publisher_name || '',
@@ -90,13 +92,13 @@ export default function Profile() {
           }
         }
       } catch (err) {
-        console.error('Error loading profile:', err);
+        console.error('Error loading artist profile:', err);
       } finally {
         setLoading(false);
       }
     };
     loadProfile();
-  }, [user?.id, user?.email]);
+  }, [selectedArtist?.id, user?.email]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'banner' | 'profile' | 'gallery') => {
     const file = e.target.files?.[0];
@@ -118,7 +120,7 @@ export default function Profile() {
   };
 
   const handleSave = async () => {
-    if (!supabase || !user?.id) {
+    if (!supabase || !selectedArtist?.id) {
       // Fallback: just show saved for demo
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -130,10 +132,8 @@ export default function Profile() {
       // Map background option name to database enum value
       const bgEnumValue = bgOption.name.toLowerCase().includes('gradient') ? 'gradient' : 'solid';
       const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          email: formData.email || user.email,
+        .from('artists')
+        .update({
           artist_name: formData.artistName,
           legal_name: formData.legalName,
           bio: formData.bio,
@@ -147,18 +147,37 @@ export default function Profile() {
           instagram: formData.instagram,
           spotify: formData.spotify,
           gallery_images: galleryImages,
+          profile_image_url: profileImage,
+          banner_image_url: bannerImage,
           updated_at: new Date().toISOString(),
-        }, { onConflict: 'id' });
+        })
+        .eq('id', selectedArtist.id);
 
       if (error) {
-        console.error('Error saving profile:', error);
+        console.error('Error saving artist profile:', error);
         alert('Failed to save profile. Please try again.');
       } else {
+        // Update the artist context
+        await updateArtist(selectedArtist.id, {
+          artistName: formData.artistName,
+          legalName: formData.legalName,
+          bio: formData.bio,
+          ipiNumber: formData.ipiNumber,
+          proAffiliation: formData.proAffiliation,
+          publisherName: formData.publisherName,
+          profileColor: profileColor,
+          website: formData.website,
+          instagram: formData.instagram,
+          spotify: formData.spotify,
+          galleryImages: galleryImages,
+          profileImageUrl: profileImage || undefined,
+          bannerImageUrl: bannerImage || undefined,
+        });
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
       }
     } catch (err) {
-      console.error('Error saving profile:', err);
+      console.error('Error saving artist profile:', err);
       alert('Failed to save profile. Please try again.');
     } finally {
       setSaving(false);
@@ -169,6 +188,20 @@ export default function Profile() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-royal-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!selectedArtist) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Music className="w-16 h-16 mx-auto mb-4 text-gray-500" />
+          <h2 className="text-2xl font-bold text-white mb-2">No Artist Selected</h2>
+          <p className="text-gray-400">
+            Please select an artist from the dropdown to edit their profile.
+          </p>
+        </div>
       </div>
     );
   }

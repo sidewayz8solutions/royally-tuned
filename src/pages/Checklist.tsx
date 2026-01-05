@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, Circle, ChevronDown, ExternalLink, AlertCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, Circle, ChevronDown, ExternalLink, AlertCircle, Loader2, Music } from 'lucide-react';
 import { FadeInOnScroll, StaggerContainer, StaggerItem } from '../components/animations';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
+import { useArtist } from '../contexts/ArtistContext';
 
 interface ChecklistItem {
   id: string;
@@ -47,6 +48,7 @@ const defaultItems: Omit<ChecklistItem, 'id'>[] = [
 
 export default function Checklist() {
   const { user } = useAuth();
+  const { selectedArtist } = useArtist();
   const [expandedCategory, setExpandedCategory] = useState<string | null>('registration');
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +56,7 @@ export default function Checklist() {
 
   // Fetch checklist items from Supabase with timeout protection
   useEffect(() => {
-    if (!user) {
+    if (!user || !selectedArtist) {
       setLoading(false);
       return;
     }
@@ -69,11 +71,11 @@ export default function Checklist() {
       setLoading(true);
       try {
         const client = supabase!;
-        console.debug('[Checklist] fetching items for user', user.id);
+        console.debug('[Checklist] fetching items for artist', selectedArtist.id);
         const { data, error } = await client
           .from('checklist_items')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('artist_id', selectedArtist.id)
           .order('sort_order', { ascending: true });
 
         if (!isMounted) return;
@@ -95,6 +97,7 @@ export default function Checklist() {
             const newItems = defaultItems.map(item => ({
               ...item,
               user_id: user.id,
+              artist_id: selectedArtist.id,
             }));
 
             const { data: inserted, error: insertError } = await client
@@ -158,7 +161,7 @@ export default function Checklist() {
       isMounted = false;
       clearTimeout(timeoutId);
     };
-  }, [user]);
+  }, [user, selectedArtist]);
 
   // Toggle item completion
   const toggleItem = async (itemId: string) => {
@@ -198,6 +201,20 @@ export default function Checklist() {
     return (
       <div className="max-w-4xl mx-auto px-6 flex items-center justify-center min-h-[400px] text-white/70">
         Supabase is not configured (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY missing). Add env vars and redeploy.
+      </div>
+    );
+  }
+
+  if (!selectedArtist) {
+    return (
+      <div className="max-w-4xl mx-auto px-6">
+        <div className="text-center py-20">
+          <Music className="w-16 h-16 mx-auto mb-4 text-gray-500" />
+          <h2 className="text-2xl font-bold text-white mb-2">No Artist Selected</h2>
+          <p className="text-gray-400">
+            Please select an artist from the dropdown to view their checklist.
+          </p>
+        </div>
       </div>
     );
   }

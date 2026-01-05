@@ -4,6 +4,7 @@ import { Menu, X, Home } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { PUBLIC_NAV, PAID_NAV } from '../types';
+import ArtistSelector from './ArtistSelector';
 
 // Paid statuses that grant access
 const PAID_STATUSES = ['pro', 'active', 'trialing', 'enterprise'];
@@ -158,10 +159,15 @@ export function AppNav() {
     <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5">
       <div className="max-w-7xl mx-auto px-6 py-3">
         <div className="flex items-center justify-between">
-          <Link to="/app" className="flex items-center gap-3 group">
-            <img src="/logo2.png" alt="Royally Tuned" className="h-12 w-auto" />
-            <span className="brand-script text-2xl text-white">Royally Tuned</span>
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link to="/app" className="flex items-center gap-3 group">
+              <img src="/logo2.png" alt="Royally Tuned" className="h-12 w-auto" />
+              <span className="brand-script text-2xl text-white">Royally Tuned</span>
+            </Link>
+
+            {/* Artist Selector - shows only if user manages multiple artists */}
+            <ArtistSelector />
+          </div>
 
           <div className="flex items-center gap-6">
             {/* Home link to public site */}

@@ -5,6 +5,7 @@ import { Music, Plus, Play, DollarSign, CheckCircle, AlertCircle, Search, Loader
 import { FadeInOnScroll, StaggerContainer, StaggerItem } from '../components/animations';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
+import { useArtist } from '../contexts/ArtistContext';
 
 interface Track {
   id: string;
@@ -22,6 +23,7 @@ interface Track {
 
 export default function Tracks() {
   const { user } = useAuth();
+  const { selectedArtist } = useArtist();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -33,7 +35,7 @@ export default function Tracks() {
 
   // Fetch tracks from Supabase with timeout protection
   useEffect(() => {
-    if (!user) {
+    if (!user || !selectedArtist) {
       setLoading(false);
       return;
     }
@@ -48,11 +50,11 @@ export default function Tracks() {
       setLoading(true);
       try {
         const client = supabase!;
-        console.debug('[Tracks] fetching tracks for user', user?.id);
+        console.debug('[Tracks] fetching tracks for artist', selectedArtist.id);
         const { data, error } = await client
           .from('tracks')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('artist_id', selectedArtist.id)
           .eq('is_active', true)
           .order('created_at', { ascending: false });
 
@@ -88,7 +90,7 @@ export default function Tracks() {
       isMounted = false;
       clearTimeout(timeoutId);
     };
-  }, [user]);
+  }, [user, selectedArtist]);
 
   const filteredTracks = tracks.filter(track =>
     (track.title || '').toLowerCase().includes(searchQuery.toLowerCase())
@@ -103,13 +105,14 @@ export default function Tracks() {
   // Handle add track
   const handleAddTrack = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !supabase || !newTrack.title.trim()) return;
+    if (!user || !selectedArtist || !supabase || !newTrack.title.trim()) return;
 
     setSaving(true);
     const { data, error } = await supabase
       .from('tracks')
       .insert({
         user_id: user.id,
+        artist_id: selectedArtist.id,
         title: newTrack.title.trim(),
         isrc: newTrack.isrc.trim() || null,
       })
@@ -128,6 +131,20 @@ export default function Tracks() {
     return (
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-center min-h-[400px] text-white/70">
         Supabase is not configured (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY missing). Add env vars and redeploy.
+      </div>
+    );
+  }
+
+  if (!selectedArtist) {
+    return (
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="text-center py-20">
+          <Music className="w-16 h-16 mx-auto mb-4 text-gray-500" />
+          <h2 className="text-2xl font-bold text-white mb-2">No Artist Selected</h2>
+          <p className="text-gray-400">
+            Please select an artist from the dropdown to view their tracks.
+          </p>
+        </div>
       </div>
     );
   }

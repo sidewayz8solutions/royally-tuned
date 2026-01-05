@@ -5,13 +5,16 @@ import { Analytics } from '@vercel/analytics/react'
 import './index.css'
 import App from './App.tsx'
 import { AuthProvider } from './contexts/AuthContext'
+import { ArtistProvider } from './contexts/ArtistContext'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <App />
-        <Analytics />
+        <ArtistProvider>
+          <App />
+          <Analytics />
+        </ArtistProvider>
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>,

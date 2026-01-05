@@ -1,4 +1,6 @@
 // User and subscription types
+export type UserRole = 'artist' | 'manager' | 'admin' | 'label';
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -10,6 +12,50 @@ export interface UserProfile {
   publisherName?: string;
   createdAt: string;
   profileColor?: string;
+  userRole?: UserRole;
+}
+
+// Artist profile (can be managed by one or more users)
+export interface Artist {
+  id: string;
+  artistName: string;
+  legalName?: string;
+  bio?: string;
+  ipiNumber?: string;
+  isniNumber?: string;
+  proAffiliation?: string;
+  publisherName?: string;
+  profileColor?: string;
+  backgroundOption?: string;
+  customBackgroundUrl?: string;
+  profileImageUrl?: string;
+  bannerImageUrl?: string;
+  galleryImages?: string[];
+  website?: string;
+  instagram?: string;
+  spotify?: string;
+  twitter?: string;
+  youtube?: string;
+  tiktok?: string;
+  soundcloud?: string;
+  appleMusic?: string;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Artist-Manager relationship
+export interface ArtistManager {
+  id: string;
+  userId: string;
+  artistId: string;
+  role: 'owner' | 'manager' | 'viewer';
+  createdAt: string;
+}
+
+// Artist with role info (for display in artist selector)
+export interface ManagedArtist extends Artist {
+  managerRole: 'owner' | 'manager' | 'viewer';
 }
 
 export interface Track {

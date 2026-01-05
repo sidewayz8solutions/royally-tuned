@@ -4,6 +4,7 @@ import { DollarSign, Music, TrendingUp, BarChart3, Loader2 } from 'lucide-react'
 import { FadeInOnScroll, StaggerContainer, StaggerItem, TiltCard } from '../components/animations';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useArtist } from '../contexts/ArtistContext';
 import { supabase } from '../lib/supabaseClient';
 
 interface Track {
@@ -36,6 +37,7 @@ interface Notification {
 export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { refreshUser, user } = useAuth();
+  const { selectedArtist } = useArtist();
   const [loading, setLoading] = useState(true);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [earnings, setEarnings] = useState<Earning[]>([]);
@@ -71,7 +73,7 @@ export default function Dashboard() {
 
   // Fetch real data from Supabase with timeout protection
   useEffect(() => {
-    if (!user) {
+    if (!user || !selectedArtist) {
       setLoading(false);
       return;
     }
@@ -87,26 +89,25 @@ export default function Dashboard() {
       setLoading(true);
       try {
         const client = supabase!;
-        // eslint-disable-next-line no-console
-        console.debug('[Dashboard] fetching data for user', user?.id);
+        console.debug('[Dashboard] fetching data for artist', selectedArtist.id);
 
         // Fetch all data in parallel with individual error handling
         const [tracksResult, earningsResult, notificationsResult] = await Promise.allSettled([
           client
             .from('tracks')
             .select('*')
-            .eq('user_id', user.id)
+            .eq('artist_id', selectedArtist.id)
             .eq('is_active', true),
           client
             .from('earnings')
             .select('*, tracks(title)')
-            .eq('user_id', user.id)
+            .eq('artist_id', selectedArtist.id)
             .order('created_at', { ascending: false })
             .limit(50),
           client
             .from('notifications')
             .select('*')
-            .eq('user_id', user.id)
+            .eq('artist_id', selectedArtist.id)
             .order('created_at', { ascending: false })
             .limit(10),
         ]);
@@ -179,7 +180,7 @@ export default function Dashboard() {
       controller.abort();
       clearTimeout(timeoutId);
     };
-  }, [user]);
+  }, [user, selectedArtist]);
 
   // Calculate stats from real data
   const stats = useMemo(() => {
@@ -268,6 +269,20 @@ export default function Dashboard() {
     );
   }
 
+  if (!selectedArtist) {
+    return (
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="text-center py-20">
+          <Music className="w-16 h-16 mx-auto mb-4 text-gray-500" />
+          <h2 className="text-2xl font-bold text-white mb-2">No Artist Selected</h2>
+          <p className="text-gray-400">
+            Please select an artist from the dropdown to view their dashboard.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-center min-h-[400px]">
@@ -280,7 +295,9 @@ export default function Dashboard() {
     <div className="max-w-7xl mx-auto px-6">
       <FadeInOnScroll>
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">
+            {selectedArtist.artistName}
+          </h1>
           <p className="text-white/50">Track your earnings and royalty performance</p>
         </div>
       </FadeInOnScroll>

@@ -6,6 +6,7 @@ import {
   CheckCircle2, AlertCircle, Trash2
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useArtist } from '../contexts/ArtistContext';
 import { supabase } from '../lib/supabaseClient';
 import SyncChecklist from '../components/SyncChecklist';
 import SyncPackage from '../components/SyncPackage';
@@ -56,6 +57,7 @@ export default function TrackDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { selectedArtist } = useArtist();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -68,7 +70,7 @@ export default function TrackDetail() {
 
   // Fetch track data
   useEffect(() => {
-    if (!id || !user || !supabase) {
+    if (!id || !user || !selectedArtist || !supabase) {
       setLoading(false);
       return;
     }
@@ -80,7 +82,7 @@ export default function TrackDetail() {
         .from('tracks')
         .select('*')
         .eq('id', id)
-        .eq('user_id', user.id)
+        .eq('artist_id', selectedArtist.id)
         .single();
 
       if (error) {
@@ -102,7 +104,7 @@ export default function TrackDetail() {
     };
 
     fetchTrack();
-  }, [id, user]);
+  }, [id, user, selectedArtist]);
 
   // Save track
   const handleSave = async () => {
@@ -270,6 +272,20 @@ export default function TrackDetail() {
       console.error('Delete failed:', err);
     }
   }, [user, track]);
+
+  if (!selectedArtist) {
+    return (
+      <div className="max-w-4xl mx-auto px-6">
+        <div className="text-center py-20">
+          <Music className="w-16 h-16 mx-auto mb-4 text-gray-500" />
+          <h2 className="text-2xl font-bold text-white mb-2">No Artist Selected</h2>
+          <p className="text-gray-400">
+            Please select an artist from the dropdown to view track details.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
