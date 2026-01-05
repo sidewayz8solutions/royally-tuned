@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, Save, Loader2, Music, Calendar, Hash,
-  CheckCircle2, AlertCircle
+  CheckCircle2, AlertCircle, Trash2
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
@@ -56,12 +56,14 @@ export default function TrackDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   const [track, setTrack] = useState<TrackData | null>(null);
 
   // Fetch track data
@@ -138,6 +140,40 @@ export default function TrackDetail() {
       setTimeout(() => setSaveSuccess(false), 3000);
     }
     setSaving(false);
+  };
+
+  // Delete track
+  const handleDelete = async () => {
+    if (!supabase || !track) return;
+
+    setDeleting(true);
+    setError(null);
+
+    try {
+      // Delete associated files from storage first
+      const filesToDelete = Object.values(track.sync_files).filter(Boolean);
+      if (filesToDelete.length > 0 && user) {
+        const paths = filesToDelete.map((_, index) => {
+          const fileTypes = ['master.mp3', 'master.wav', 'acapella.wav', 'instrumental.wav', 'splits-sheet.pdf', 'one-stop-auth.pdf'];
+          return `${user.id}/${track.id}/${fileTypes[index]}`;
+        });
+        await supabase.storage.from('sync-files').remove(paths);
+      }
+
+      // Delete the track record
+      const { error } = await supabase
+        .from('tracks')
+        .delete()
+        .eq('id', track.id);
+
+      if (error) throw error;
+
+      // Navigate back to tracks list
+      navigate('/app/tracks', { replace: true });
+    } catch (err) {
+      setError('Failed to delete track');
+      setDeleting(false);
+    }
   };
 
   const updateField = <K extends keyof TrackData>(field: K, value: TrackData[K]) => {
@@ -275,22 +311,69 @@ export default function TrackDetail() {
               <p className="text-white/50 text-sm">Edit track details & sync metadata</p>
             </div>
           </div>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="btn-primary flex items-center gap-2"
-          >
-            {saving ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : saveSuccess ? (
-              <CheckCircle2 className="w-5 h-5 text-green-400" />
-            ) : (
-              <Save className="w-5 h-5" />
-            )}
-            {saveSuccess ? 'Saved!' : 'Save Changes'}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="btn-secondary flex items-center gap-2 text-red-400 border-red-500/30 hover:bg-red-500/10"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="btn-primary flex items-center gap-2"
+            >
+              {saving ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : saveSuccess ? (
+                <CheckCircle2 className="w-5 h-5 text-green-400" />
+              ) : (
+                <Save className="w-5 h-5" />
+              )}
+              {saveSuccess ? 'Saved!' : 'Save Changes'}
+            </button>
+          </div>
         </div>
       </FadeInOnScroll>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass-card rounded-2xl p-6 max-w-md w-full"
+          >
+            <h3 className="text-xl font-bold text-white mb-2">Delete Track?</h3>
+            <p className="text-white/60 mb-6">
+              Are you sure you want to delete "<span className="text-white">{track.title}</span>"?
+              This will also delete all uploaded files. This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="btn-primary bg-red-600 hover:bg-red-700 flex items-center gap-2"
+              >
+                {deleting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                {deleting ? 'Deleting...' : 'Delete Track'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       <div className="space-y-8">
         {/* Basic Info Section */}

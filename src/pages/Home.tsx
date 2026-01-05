@@ -2,9 +2,17 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Crown, ArrowRight, DollarSign, FileText, BarChart3,
-  CheckCircle, Music, Shield, Zap, TrendingUp, Users, Lock
+  CheckCircle, Music, Shield, Zap, TrendingUp, Users, Lock,
+  ExternalLink, Radio, Mic2
 } from 'lucide-react';
 import { FadeInOnScroll, StaggerContainer, StaggerItem, Parallax, Float, TiltCard } from '../components/animations';
+
+// TikTok Icon Component
+const TikTokIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+  </svg>
+);
 
 export default function Home() {
   return (
@@ -275,6 +283,115 @@ export default function Home() {
               </div>
             </TiltCard>
           </FadeInOnScroll>
+        </div>
+      </section>
+
+      {/* Featured Partners & Resources Section */}
+      <section className="py-20 px-6 bg-gradient-to-b from-transparent via-royal-950/10 to-transparent">
+        <div className="max-w-6xl mx-auto">
+          <FadeInOnScroll>
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                Promoted <span className="gradient-text">Resources</span>
+              </h2>
+              <p className="text-white/50 max-w-2xl mx-auto">
+                Tools and creators we recommend to help grow your music career
+              </p>
+            </div>
+          </FadeInOnScroll>
+
+          <StaggerContainer className="grid md:grid-cols-3 gap-6">
+            {/* SubmitHub */}
+            <StaggerItem>
+              <a
+                href="https://www.submithub.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block glass-card rounded-2xl p-6 hover:border-royal-400/40 transition-all group h-full"
+              >
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-14 h-14 rounded-xl bg-purple-600/20 flex items-center justify-center">
+                    <Music className="w-7 h-7 text-purple-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white group-hover:text-royal-300 transition-colors flex items-center gap-2">
+                      SubmitHub
+                      <ExternalLink className="w-4 h-4 text-white/40" />
+                    </h3>
+                    <span className="text-xs text-purple-400 uppercase tracking-wide">Music Promotion</span>
+                  </div>
+                </div>
+                <p className="text-white/60 text-sm">
+                  Submit your music directly to blogs, playlists, and influencers.
+                  Get your tracks heard by real curators.
+                </p>
+              </a>
+            </StaggerItem>
+
+            {/* The Great Sage TikTok */}
+            <StaggerItem>
+              <a
+                href="https://www.tiktok.com/@thegreatsage76"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block glass-card rounded-2xl p-6 hover:border-pink-400/40 transition-all group h-full"
+              >
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-14 h-14 rounded-xl bg-pink-600/20 flex items-center justify-center">
+                    <TikTokIcon className="w-7 h-7 text-pink-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white group-hover:text-pink-300 transition-colors flex items-center gap-2">
+                      @thegreatsage76
+                      <ExternalLink className="w-4 h-4 text-white/40" />
+                    </h3>
+                    <span className="text-xs text-pink-400 uppercase tracking-wide">TikTok Creator</span>
+                  </div>
+                </div>
+                <p className="text-white/60 text-sm">
+                  Music industry insights and tips from The Great Sage.
+                  Follow for knowledge that'll level up your career.
+                </p>
+              </a>
+            </StaggerItem>
+
+            {/* Musa & Kaya Show */}
+            <StaggerItem>
+              <a
+                href="https://www.youtube.com/@TheMusaKayaShow"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block glass-card rounded-2xl p-6 hover:border-cyan-400/40 transition-all group h-full"
+              >
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-14 h-14 rounded-xl overflow-hidden bg-gradient-to-br from-blue-600 to-red-500 flex items-center justify-center">
+                    <img
+                      src="/musa-kaya-show.png"
+                      alt="The Musa & Kaya Show"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.parentElement?.classList.add('items-center', 'justify-center');
+                        const icon = document.createElement('span');
+                        icon.innerHTML = '<svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>';
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white group-hover:text-cyan-300 transition-colors flex items-center gap-2">
+                      Musa & Kaya Show
+                      <ExternalLink className="w-4 h-4 text-white/40" />
+                    </h3>
+                    <span className="text-xs text-cyan-400 uppercase tracking-wide">Podcast / Show</span>
+                  </div>
+                </div>
+                <p className="text-white/60 text-sm">
+                  Interviews, insights, and real talk about the music industry.
+                  Tune in for inspiration and industry knowledge.
+                </p>
+              </a>
+            </StaggerItem>
+          </StaggerContainer>
         </div>
       </section>
 

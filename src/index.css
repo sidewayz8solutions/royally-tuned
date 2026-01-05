@@ -280,9 +280,34 @@ a[role="button"]:hover,
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
-select:focus-visible {
+select:focus-visible,
+textarea:focus-visible {
   outline: 2px solid #7c3aed;
   outline-offset: 2px;
+}
+
+/* Ensure all form elements have light text on dark backgrounds */
+input,
+textarea,
+select {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* Ensure labels and headings are never black */
+label,
+h1, h2, h3, h4, h5, h6 {
+  color: white;
+}
+
+/* Fix any black text in the app */
+.text-black {
+  color: #fbbf24 !important;
 }
 
 /* Purple/Yellow Gradient Button */
