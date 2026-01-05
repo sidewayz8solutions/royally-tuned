@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FadeInOnScroll } from '../components/animations';
 import { supabase } from '../lib/supabaseClient';
@@ -19,17 +19,17 @@ export default function FormEditor() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+
+  // Derive initial template from slug and use lazy state initializers.
+  // When slug changes we force a remount by setting the root element's key below.
+  const initialTpl = slug
+    ? TEMPLATES[slug] || { title: slug.replace(/-/g, ' '), content: '' }
+    : { title: '', content: '' };
+
+  const [title, setTitle] = useState(() => initialTpl.title);
+  const [content, setContent] = useState(() => initialTpl.content);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!slug) return;
-    const tpl = TEMPLATES[slug] || { title: slug.replace(/-/g, ' '), content: '' };
-    setTitle(tpl.title);
-    setContent(tpl.content);
-  }, [slug]);
 
   const save = async () => {
     setSaving(true);
@@ -38,7 +38,7 @@ export default function FormEditor() {
     // Try saving to Supabase 'documents' table. If that fails or table not present, fall back to localStorage.
     try {
       if (supabase && user) {
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('documents')
           .insert({ user_id: user.id, title, slug, content })
           .select()
@@ -60,7 +60,8 @@ export default function FormEditor() {
         // Not logged in — prompt to login
         setMessage('Please log in to save this form.');
       }
-    } catch (err: any) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (err: unknown) {
       const key = user ? `local_form_${user.id}_${slug}` : `local_form_guest_${slug}`;
       localStorage.setItem(key, JSON.stringify({ title, content, savedAt: Date.now() }));
       setMessage('Saved locally (error while saving).');
@@ -70,7 +71,9 @@ export default function FormEditor() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-12">
+    // Add key={slug} so the component remounts when the route slug changes,
+    // allowing the lazy initializers above to run again instead of using an effect.
+    <div className="max-w-4xl mx-auto px-6 py-12" key={slug}>
       <FadeInOnScroll>
         <div className="mb-6">
           <button className="text-sm text-white/60 hover:underline" onClick={() => navigate(-1)}>← Back</button>
