@@ -331,7 +331,7 @@ export default function Home() {
             {/* Featured TikTok: Culture Syndicate.live */}
             <StaggerItem>
               <a
-                href="https://www.tiktok.com/@culturesyndicate.live"
+                href="https://www.tiktok.com/@thegreatsage76"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block glass-card rounded-2xl p-6 hover:border-pink-400/40 transition-all group h-full"
@@ -345,6 +345,7 @@ export default function Home() {
                       Culture Syndicate.live
                       <ExternalLink className="w-4 h-4 text-white/40" />
                     </h3>
+                    <div className="text-xs text-pink-400">@thegreatsage76</div>
                     <span className="text-xs text-pink-400 uppercase tracking-wide">TikTok Creator</span>
                   </div>
                 </div>
@@ -355,10 +356,10 @@ export default function Home() {
               </a>
             </StaggerItem>
 
-            {/* Combined partner — link to same TikTok */}
+            {/* Musa & Kaya Show (promoted via Culture Syndicate.live) */}
             <StaggerItem>
               <a
-                href="https://www.tiktok.com/@culturesyndicate.live"
+                href="https://www.tiktok.com/@thegreatsage76"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block glass-card rounded-2xl p-6 hover:border-pink-400/40 transition-all group h-full"
@@ -369,10 +370,11 @@ export default function Home() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-white group-hover:text-pink-300 transition-colors flex items-center gap-2">
-                      Culture Syndicate.live
+                      Musa & Kaya Show
                       <ExternalLink className="w-4 h-4 text-white/40" />
                     </h3>
-                    <span className="text-xs text-pink-400 uppercase tracking-wide">TikTok Creator</span>
+                    <div className="text-xs text-cyan-400">Culture Syndicate.live</div>
+                    <div className="text-xs text-cyan-400">@thegreatsage76</div>
                   </div>
                 </div>
                 <p className="text-white/60 text-sm">
