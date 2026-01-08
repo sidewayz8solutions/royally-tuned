@@ -44,3 +44,4 @@ coverage/
 fetch-client/
 
 .vercel
+.vscode/ntrsync
