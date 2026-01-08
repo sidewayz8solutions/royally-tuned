@@ -44,12 +44,24 @@ export default function Footer() {
           </Link>
 
           {/* Links */}
-          <div className="flex items-center gap-8 text-sm text-white/50">
+          <div className="flex items-center gap-6 text-sm text-white/50 flex-wrap justify-center">
+            <Link to="/about" className="hover:text-white transition-colors">
+              About
+            </Link>
+            <Link to="/pricing" className="hover:text-white transition-colors">
+              Pricing
+            </Link>
+            <Link to="/faq" className="hover:text-white transition-colors">
+              FAQ
+            </Link>
+            <Link to="/press" className="hover:text-white transition-colors">
+              Press
+            </Link>
             <Link to="/privacy" className="hover:text-white transition-colors">
-              Privacy Policy
+              Privacy
             </Link>
             <Link to="/terms" className="hover:text-white transition-colors">
-              Terms of Service
+              Terms
             </Link>
           </div>
 

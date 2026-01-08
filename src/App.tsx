@@ -16,6 +16,12 @@ const Pricing = lazy(() => import('./pages/Pricing'));
 const SignUp = lazy(() => import('./pages/SignUp'));
 const Privacy = lazy(() => import('./pages/Privacy'));
 const Terms = lazy(() => import('./pages/Terms'));
+const FAQ = lazy(() => import('./pages/FAQ'));
+const Press = lazy(() => import('./pages/Press'));
+const CompareSoundExchange = lazy(() => import('./pages/compare/SoundExchange'));
+const CompareBMI = lazy(() => import('./pages/compare/BMI'));
+const CompareDistroKid = lazy(() => import('./pages/compare/DistroKid'));
+const CompareSongtrust = lazy(() => import('./pages/compare/Songtrust'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Tracks = lazy(() => import('./pages/Tracks'));
 const Checklist = lazy(() => import('./pages/Checklist'));
@@ -38,6 +44,8 @@ const prefetchMap: Record<string, () => Promise<unknown>> = {
   '/pricing': () => import('./pages/Pricing'),
   '/signup': () => import('./pages/SignUp'),
   '/login': () => import('./pages/Login'),
+  '/faq': () => import('./pages/FAQ'),
+  '/press': () => import('./pages/Press'),
   '/app': () => import('./pages/Dashboard'),
   '/app/tracks': () => import('./pages/Tracks'),
   '/app/checklist': () => import('./pages/Checklist'),
@@ -93,6 +101,12 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/press" element={<Press />} />
+            <Route path="/compare/soundexchange" element={<CompareSoundExchange />} />
+            <Route path="/compare/bmi" element={<CompareBMI />} />
+            <Route path="/compare/distrokid" element={<CompareDistroKid />} />
+            <Route path="/compare/songtrust" element={<CompareSongtrust />} />
           </Route>
 
           {/* Gated Pages - Subscription Required */}
