@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
-import { Calculator, FileText, Download, TrendingUp } from 'lucide-react';
+import { Calculator, FileText, TrendingUp, ExternalLink } from 'lucide-react';
 import { FadeInOnScroll, StaggerContainer, StaggerItem, TiltCard } from '../components/animations';
-import { useNavigate } from 'react-router-dom';
 
 // Per-platform estimated payout ranges (per stream). These are estimates — show low/median/high ranges.
 // Sources: public industry payout estimates (varies by territory, catalogue, agreement and time).
@@ -35,7 +34,6 @@ const DISTRIBUTION_PROFILES: Record<string, { id: string; name: string; weights:
 };
 
 export default function Toolkit() {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'calculator' | 'forms'>('calculator');
 
   // Total quick slider to set a "total monthly streams" and then distribute equally when enabled.
@@ -178,17 +176,16 @@ export default function Toolkit() {
   }, [profileId, totalStreams, selected]);
 
   const forms = [
-    { name: 'BMI Songwriter Application', type: 'PRO' },
-    { name: 'ASCAP Member Application', type: 'PRO' },
-    { name: 'MLC Registration Form', type: 'Mechanical' },
-    { name: 'SoundExchange Artist Form', type: 'Neighboring' },
-  // Copyright forms: PA = Performing Arts (composition), SR = Sound Recording (master)
-  { name: 'Copyright Registration (PA)', type: 'Copyright', external_link: 'https://www.copyright.gov/forms/pa.pdf' },
-  { name: 'Copyright Registration (SR)', type: 'Copyright', external_link: 'https://www.copyright.gov/forms/sr.pdf' },
-  // External registration: Song title registration via Luminate Data
-  { name: 'Song Title Registration (LuminateData)', type: 'Registration', external_link: 'https://luminatedata.com/song-title-registration/' },
-    { name: 'TV Music Rights License', type: 'Legal' },
-    { name: 'Co-Production Agreement', type: 'Legal' },
+    { name: 'BMI Songwriter Application', type: 'PRO', external_link: 'https://www.bmi.com/join' },
+    { name: 'ASCAP Member Application', type: 'PRO', external_link: 'https://www.ascap.com/join' },
+    { name: 'SESAC Affiliation', type: 'PRO', external_link: 'https://www.sesac.com/affiliate' },
+    { name: 'MLC Registration Form', type: 'Mechanical', external_link: 'https://www.themlc.com/join' },
+    { name: 'SoundExchange Artist Registration', type: 'Neighboring', external_link: 'https://www.soundexchange.com/artist-copyright-owner/register/' },
+    { name: 'SoundExchange Sound Recording Owner', type: 'Neighboring', external_link: 'https://www.soundexchange.com/artist-copyright-owner/register/' },
+    { name: 'Copyright Registration (PA)', type: 'Copyright', external_link: 'https://www.copyright.gov/registration/' },
+    { name: 'Copyright Registration (SR)', type: 'Copyright', external_link: 'https://www.copyright.gov/registration/' },
+    { name: 'Song Title Registration (LuminateData)', type: 'Registration', external_link: 'https://luminatedata.com/song-title-registration/' },
+    { name: 'Harry Fox Agency (HFA)', type: 'Mechanical', external_link: 'https://www.harryfox.com/publishers/songfile.html' },
   ];
 
   const formatMoney = (n: number) => '$' + Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -417,56 +414,35 @@ export default function Toolkit() {
       )}
 
       {activeTab === 'forms' && (
-        <StaggerContainer className="grid md:grid-cols-2 gap-4">
-          {forms.map((form, i) => (
-            <StaggerItem key={i}>
-              <TiltCard>
-                <div className="glass-card rounded-xl p-6 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-royal-600/20 flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-red-500" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-white">{form.name}</h3>
-                    <p className="text-sm text-white/50">{form.type}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {form.external_link ? (
-                      <a
-                        href={form.external_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-3 py-2 rounded-md bg-white/5 text-white/70 hover:bg-white/10 text-center"
-                      >
-                        Open
-                      </a>
-                    ) : (
-                      <button
-                        onClick={() => navigate(`/app/forms/${form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`)}
-                        className="px-3 py-2 rounded-md bg-white/5 text-white/70 hover:bg-white/10"
-                      >
-                        Open
-                      </button>
-                    )}
-                    {form.external_link ? (
-                      <a
-                        href={form.external_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors"
-                      >
-                        <Download className="w-5 h-5" />
-                      </a>
-                    ) : (
-                      <button className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors">
-                        <Download className="w-5 h-5" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </TiltCard>
-            </StaggerItem>
-          ))}
-        </StaggerContainer>
+        <div>
+          <p className="text-white/50 text-sm mb-6">Click on any form to go directly to the official registration page.</p>
+          <StaggerContainer className="grid md:grid-cols-2 gap-4">
+            {forms.map((form, i) => (
+              <StaggerItem key={i}>
+                <TiltCard>
+                  <a
+                    href={form.external_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="glass-card rounded-xl p-6 flex items-center gap-4 hover:bg-white/5 transition-colors cursor-pointer"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-royal-600/20 flex items-center justify-center">
+                      <FileText className="w-6 h-6 text-yellow-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-white">{form.name}</h3>
+                      <p className="text-sm text-white/50">{form.type}</p>
+                    </div>
+                    <div className="flex items-center gap-2 text-yellow-400">
+                      <span className="text-sm hidden sm:inline">Register</span>
+                      <ExternalLink className="w-5 h-5" />
+                    </div>
+                  </a>
+                </TiltCard>
+              </StaggerItem>
+            ))}
+          </StaggerContainer>
+        </div>
       )}
     </div>
   );

@@ -152,39 +152,91 @@ export function PublicNav() {
 }
 
 export function AppNav() {
+  const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { signOut } = useAuth();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5">
-      <div className="max-w-7xl mx-auto px-6 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link to="/app" className="flex items-center gap-3 group">
-              <img src="/logo2.png" alt="Royally Tuned" className="h-12 w-auto" />
-              <span className="brand-script text-2xl text-white">Royally Tuned</span>
-            </Link>
+    <nav className="fixed top-0 left-0 right-0 z-50">
+      <div className="glass border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Link to="/app" className="flex items-center gap-2 sm:gap-3 group">
+                <img src="/logo2.png" alt="Royally Tuned" className="h-10 sm:h-12 w-auto" />
+                <span className="brand-script text-xl sm:text-2xl text-white hidden xs:inline">Royally Tuned</span>
+              </Link>
 
-            {/* Artist Selector - shows only if user manages multiple artists */}
-            <div className="ml-[4%]">
-              <ArtistSelector />
+              {/* Artist Selector - shows only if user manages multiple artists */}
+              <div className="ml-1 sm:ml-[4%]">
+                <ArtistSelector />
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-6">
-            {/* Home link to public site */}
+            {/* Desktop Nav */}
+            <div className="hidden lg:flex items-center gap-6">
+              {/* Home link to public site */}
+              <Link
+                to="/"
+                className="text-sm font-medium text-white/70 hover:text-white transition-colors flex items-center gap-1"
+              >
+                <Home className="w-4 h-4" />
+                <span>Home</span>
+              </Link>
+              {PAID_NAV.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`text-sm font-medium transition-colors ${
+                    location.pathname === item.path
+                      ? 'text-yellow-400 font-semibold'
+                      : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              <button
+                onClick={signOut}
+                className="text-sm text-white/50 hover:text-white transition-colors"
+              >
+                Sign Out
+              </button>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="lg:hidden text-white p-2"
+            >
+              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="lg:hidden glass border-b border-white/5"
+        >
+          <div className="px-6 py-4 space-y-4">
             <Link
               to="/"
-              className="text-sm font-medium text-white/70 hover:text-white transition-colors flex items-center gap-1"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-2 text-white/70 hover:text-white"
             >
               <Home className="w-4 h-4" />
-              <span className="hidden sm:inline">Home</span>
+              Home
             </Link>
             {PAID_NAV.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`text-sm font-medium transition-colors ${
+                onClick={() => setIsOpen(false)}
+                className={`block text-sm font-medium transition-colors ${
                   location.pathname === item.path
                     ? 'text-yellow-400 font-semibold'
                     : 'text-white/70 hover:text-white'
@@ -194,14 +246,17 @@ export function AppNav() {
               </Link>
             ))}
             <button
-              onClick={signOut}
-              className="text-sm text-white/50 hover:text-white transition-colors"
+              onClick={() => {
+                signOut();
+                setIsOpen(false);
+              }}
+              className="block text-white/50 hover:text-white w-full text-left text-sm"
             >
               Sign Out
             </button>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      )}
     </nav>
   );
 }
