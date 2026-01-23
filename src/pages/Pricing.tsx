@@ -69,7 +69,7 @@ export default function Pricing() {
 	};
 
   // Promo code shown on the pricing page (managed here so it's easy to update)
-  const PROMO_CODE = 'Royal6234';
+  const PROMO_CODE = 'ROYAL6234';
 
 	// Determine button text and state
 	const getButtonContent = () => {
