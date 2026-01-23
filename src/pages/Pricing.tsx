@@ -196,8 +196,8 @@ export default function Pricing() {
                   <div className="w-14 h-14 rounded-xl bg-royal-600/20 flex items-center justify-center mx-auto mb-4">
                     <item.icon className="w-7 h-7 text-red-500" />
                   </div>
-                  <div className="text-3xl font-bold text-gold-400 mb-2">{item.stat}</div>
-                  <p className="text-sm text-white/50">{item.label}</p>
+                  <div className="text-3xl font-bold text-white mb-2">{item.stat}</div>
+                  <p className="text-sm text-white/60">{item.label}</p>
                 </div>
               </StaggerItem>
             ))}
