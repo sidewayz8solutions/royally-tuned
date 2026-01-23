@@ -11,7 +11,6 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 	const [confirmPassword, setConfirmPassword] = useState('');
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
-	const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
 	const [pendingLogin, setPendingLogin] = useState(false);
 	const { signUp, signIn, user, subscriptionStatus } = useAuth();
 	const navigate = useNavigate();
@@ -21,20 +20,37 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 	// Check if user just confirmed their email
 	const searchParams = new URLSearchParams(location.search);
 	const justConfirmed = searchParams.get('confirmed') === 'true';
+		const signupSuccess = searchParams.get('signup') === 'success';
+		const emailFromQuery = searchParams.get('email') || '';
+
+		// Prefill email when we land on /login from /signup
+		useEffect(() => {
+			if (emailFromQuery && !email) setEmail(emailFromQuery);
+			// eslint-disable-next-line react-hooks/exhaustive-deps
+		}, [emailFromQuery]);
 
 	// Redirect when user becomes logged in after login attempt
 	useEffect(() => {
-		if (pendingLogin && user && !redirectAttempted.current) {
-			redirectAttempted.current = true;
-			// User is now logged in, redirect to app using react-router (no page reload)
-			navigate('/app', { replace: true });
-		}
-	}, [pendingLogin, user, navigate]);
+			const PAID_STATUSES = ['pro', 'active', 'trialing', 'enterprise'];
+			const statusLower = (subscriptionStatus || '').toLowerCase();
+			const isPaid = PAID_STATUSES.includes(statusLower);
+
+			if (pendingLogin && user && !redirectAttempted.current) {
+				redirectAttempted.current = true;
+				// Paid users go straight to the app. Everyone else goes to payment.
+				if (isPaid) {
+					navigate('/app', { replace: true });
+				} else {
+					navigate('/pricing?startCheckout=true', { replace: true });
+				}
+			}
+		}, [pendingLogin, user, subscriptionStatus, navigate]);
 
 	// Redirect if user is already logged in with active subscription
 	useEffect(() => {
-		const PAID_STATUSES = ['pro', 'active', 'trialing', 'enterprise'];
-		if (user && subscriptionStatus && PAID_STATUSES.includes(subscriptionStatus) && !loading && !pendingLogin && !redirectAttempted.current) {
+			const PAID_STATUSES = ['pro', 'active', 'trialing', 'enterprise'];
+			const statusLower = (subscriptionStatus || '').toLowerCase();
+			if (user && statusLower && PAID_STATUSES.includes(statusLower) && !loading && !pendingLogin && !redirectAttempted.current) {
 			redirectAttempted.current = true;
 			navigate('/app', { replace: true });
 		}
@@ -61,7 +77,7 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 		if (mode === 'signup') {
 			const result = await signUp(email, password);
 			if (result.ok) {
-				setShowEmailConfirmation(true);
+				navigate(`/login?signup=success&email=${encodeURIComponent(email)}`, { replace: true });
 			} else {
 				setError(result.error || 'Something went wrong. Please try again.');
 			}
@@ -81,47 +97,32 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 		}
 	};
 
-	// Show email confirmation screen after signup
-	if (showEmailConfirmation) {
-		return (
-			<div className="min-h-[80vh] flex items-center justify-center px-6 py-24">
-				<div className="max-w-md w-full">
-					<motion.div
-						initial={{ opacity: 0, y: 20 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.6 }}
-						className="glass-card rounded-3xl p-10 text-center"
-					>
-						<div className="w-20 h-20 rounded-full bg-gradient-to-br from-royal-600/30 to-gold-500/20 flex items-center justify-center mx-auto mb-6">
-							<Mail className="w-10 h-10 text-gold-400" />
-						</div>
-						<h1 className="text-3xl font-bold text-white mb-4">Check your email</h1>
-						<p className="text-white/60 mb-6">
-							We sent a confirmation link to<br />
-							<span className="text-white font-medium">{email}</span>
-						</p>
-						<p className="text-white/50 text-sm mb-8">
-							Click the link in your email to verify your account. We'll try to sign you in automatically and take you to payment.
-							If anything goes wrong, just log in here after confirming.
-						</p>
-						<div className="space-y-3">
-							<button
-								type="button"
-								onClick={() => setShowEmailConfirmation(false)}
-								className="w-full btn-secondary py-3"
-							>
-								Use a different email
-							</button>
-						</div>
-					</motion.div>
-				</div>
-			</div>
-		);
-	}
-
 	return (
 		<div className="min-h-[80vh] flex items-center justify-center px-6 py-24">
 			<div className="max-w-md w-full">
+					{/* Signup success banner */}
+					{signupSuccess && (
+						<motion.div
+							initial={{ opacity: 0, y: -20 }}
+							animate={{ opacity: 1, y: 0 }}
+							className="mb-6 p-5 rounded-2xl bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30"
+						>
+							<div className="flex items-center gap-4">
+								<div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center shrink-0">
+									<CheckCircle className="w-6 h-6 text-green-400" />
+								</div>
+								<div>
+									<h3 className="text-lg font-bold text-white">Congrats! Your account is created.</h3>
+									<p className="text-green-300/80 text-sm">Log in below to continue to payment.</p>
+								</div>
+							</div>
+							<div className="mt-4 flex items-center gap-2 text-green-300">
+								<CreditCard className="w-5 h-5" />
+								<span className="font-medium">We'll send you straight to checkout after login</span>
+							</div>
+						</motion.div>
+					)}
+
 				{/* Email confirmed banner */}
 				{justConfirmed && (
 					<motion.div
@@ -156,11 +157,11 @@ export default function SignUp({ defaultMode = 'signup' }: { defaultMode?: 'sign
 							<Crown className="w-8 h-8 text-gold-400" />
 						</div>
 						<h1 className="text-3xl font-bold text-white mb-2">
-							{justConfirmed ? 'Log in to pay' : (mode === 'signup' ? 'Create your account' : 'Welcome back')}
+									{(justConfirmed || signupSuccess) ? 'Log in to continue' : (mode === 'signup' ? 'Create your account' : 'Welcome back')}
 						</h1>
 						<p className="text-white/60">
-							{justConfirmed
-								? 'Enter your password to continue to payment.'
+									{(justConfirmed || signupSuccess)
+										? 'Enter your password to continue to payment.'
 								: (mode === 'signup'
 									? 'Start claiming your royalties for just $35/month.'
 									: 'Log in to access your dashboard and royalty tools.')}

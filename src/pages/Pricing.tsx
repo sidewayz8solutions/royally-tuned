@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Crown, CheckCircle, ArrowRight, Zap, Shield, BarChart3 } from 'lucide-react';
 import { FadeInOnScroll, TiltCard, StaggerContainer, StaggerItem } from '../components/animations';
 import { useAuth } from '../contexts/AuthContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 interface CheckoutResponse {
   url?: string;
@@ -10,9 +11,18 @@ interface CheckoutResponse {
 }
 
 export default function Pricing() {
-  const { user, loading: authLoading } = useAuth();
+	  const { user, loading: authLoading, subscriptionStatus } = useAuth();
+		const location = useLocation();
+		const navigate = useNavigate();
 	const [checkoutLoading, setCheckoutLoading] = useState(false);
 	const [error, setError] = useState('');
+		const autoCheckoutStarted = useRef(false);
+		const startCheckoutParam = new URLSearchParams(location.search).get('startCheckout') === 'true';
+		const autoCheckoutTimer = useRef<number | null>(null);
+
+		const PAID_STATUSES = ['pro', 'active', 'trialing', 'enterprise'];
+		const statusLower = (subscriptionStatus || '').toLowerCase();
+		const isPaid = statusLower ? PAID_STATUSES.includes(statusLower) : false;
 
 	const startCheckout = async () => {
 		// If somehow we don't have a user yet, send them to signup first
@@ -58,6 +68,9 @@ export default function Pricing() {
 		}
 	};
 
+  // Promo code shown on the pricing page (managed here so it's easy to update)
+  const PROMO_CODE = 'Royal6234';
+
 	// Determine button text and state
 	const getButtonContent = () => {
 		if (authLoading) return 'Loading...';
@@ -73,6 +86,55 @@ export default function Pricing() {
 			startCheckout();
 		}
 	};
+
+		// If user came here right after logging in, automatically send them into Stripe Checkout.
+		useEffect(() => {
+			if (autoCheckoutStarted.current) return;
+			if (!startCheckoutParam) return;
+			if (authLoading) return;
+			if (!user) return;
+
+			// If they're already paid, don't start another checkout.
+			if (isPaid) {
+				autoCheckoutStarted.current = true;
+				try {
+					window.history.replaceState({}, document.title, window.location.pathname);
+				} catch {
+					// ignore
+				}
+				navigate('/app', { replace: true });
+				return;
+			}
+
+			// If subscription status hasn't loaded yet, wait briefly so paid users don't get auto-charged.
+			if (subscriptionStatus == null) {
+				autoCheckoutTimer.current = window.setTimeout(() => {
+					if (autoCheckoutStarted.current) return;
+					autoCheckoutStarted.current = true;
+					try {
+						window.history.replaceState({}, document.title, window.location.pathname);
+					} catch {
+						// ignore
+					}
+					startCheckout();
+				}, 1500);
+				return () => {
+					if (autoCheckoutTimer.current != null) {
+						window.clearTimeout(autoCheckoutTimer.current);
+						autoCheckoutTimer.current = null;
+					}
+				};
+			}
+
+			autoCheckoutStarted.current = true;
+			// Clean URL so refresh doesn't restart checkout.
+			try {
+				window.history.replaceState({}, document.title, window.location.pathname);
+			} catch {
+				// ignore
+			}
+			startCheckout();
+		}, [startCheckoutParam, authLoading, user, subscriptionStatus, isPaid, navigate]);
 
   return (
     <div className="overflow-hidden">
@@ -119,13 +181,14 @@ export default function Pricing() {
                       <span className="text-xl text-white/50">/month</span>
                     </div>
                     <p className="text-white/50 mt-2">Cancel anytime. No contracts.</p>
+                    <p className="text-sm text-white/60 mt-2">Use promo code <span className="font-medium text-white">{PROMO_CODE}</span> at checkout.</p>
                   </div>
 
                   {/* Show welcome message for logged-in users */}
                   {user && !authLoading && (
                     <div className="mb-6 p-4 rounded-xl bg-green-500/10 border border-green-500/20">
                       <p className="text-green-400 text-center font-medium">
-                        ✓ Email verified! Click below to complete your subscription.
+											✓ You're logged in. Click below to complete your subscription.
                       </p>
                     </div>
                   )}

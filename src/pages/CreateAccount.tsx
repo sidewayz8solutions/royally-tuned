@@ -74,6 +74,7 @@ export default function CreateAccount() {
         email,
         password,
         options: {
+	          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             stripe_customer_id: sessionData?.customerId,
           },

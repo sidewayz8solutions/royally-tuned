@@ -172,49 +172,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		return (meta['subscription_status'] as string) || null;
 	}, [user, dbSubscriptionStatus]);
 
-	// Standard email + password sign-up.
-	// Always sends a new confirmation email, even if user exists but hasn't confirmed.
+		// Standard email + password sign-up.
+		// Desired product flow: after signup, user should go to Login (not stay signed in).
+		// NOTE: To truly have "No confirmation email", disable email confirmations in Supabase Dashboard
+		// (Auth → Providers → Email → Confirm email = OFF). Code cannot override that setting.
 	const signUp = async (email: string, password: string) => {
 		try {
 			if (!supabase) return { ok: false, error: 'Auth not configured' };
 
-			const { data, error } = await supabase.auth.signUp({
-				email,
-				password,
-			});
+				// Explicit redirect target avoids relying on Supabase Auth "Site URL" defaults.
+				// Make sure this URL is added to Supabase Auth Redirect URLs allow-list.
+				const { error } = await supabase.auth.signUp({
+					email,
+					password,
+					options: {
+						emailRedirectTo: `${window.location.origin}/auth/callback`,
+					},
+				});
 
-			// If user already exists but hasn't confirmed, resend confirmation email
-			if (error) {
-				// Check if it's a "user already registered" error
-				if (error.message.toLowerCase().includes('already registered') ||
-				    error.message.toLowerCase().includes('already exists')) {
-					// Try to resend confirmation email
-					const { error: resendError } = await supabase.auth.resend({
-						type: 'signup',
-						email,
-					});
-					if (resendError) {
+				if (error) {
+					const msg = error.message.toLowerCase();
+					if (msg.includes('already registered') || msg.includes('already exists')) {
 						return { ok: false, error: 'This email is already registered. Please log in instead.' };
 					}
-					return { ok: true }; // Resent confirmation email
+					// Supabase sometimes returns a generic 500 here when Auth is misconfigured
+					// (hooks/email templates/captcha/site url). Provide a more actionable message.
+					if ((error as any)?.status === 500) {
+						return {
+							ok: false,
+							error:
+								'Signup failed (Supabase Auth 500). This is usually caused by an Auth configuration issue (Hooks, Email Templates, Captcha, or missing/invalid Site URL / Redirect URLs). Please check Supabase Dashboard → Authentication settings and try again.',
+						};
+					}
+					return { ok: false, error: error.message };
 				}
-				return { ok: false, error: error.message };
-			}
 
-			// Check if user was created but needs confirmation (identities array is empty for unconfirmed)
-			// Supabase returns the user even if they need to confirm
-			if (data.user && data.user.identities && data.user.identities.length === 0) {
-				// User exists but hasn't confirmed - resend confirmation
-				const { error: resendError } = await supabase.auth.resend({
-					type: 'signup',
-					email,
-				});
-				if (resendError) {
-					return { ok: false, error: 'Could not send confirmation email. Please try again.' };
+				// If confirmations are OFF, Supabase will create a session. We don't want the user
+				// to stay signed in after signup (we want them to log in and then go to payment).
+				try {
+					await supabase.auth.signOut();
+				} catch {
+					// ignore
 				}
-			}
 
-			return { ok: true };
+				return { ok: true };
 		} catch (e) {
 			return { ok: false, error: e instanceof Error ? e.message : 'Unknown error' };
 		}
