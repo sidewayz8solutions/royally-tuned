@@ -69,7 +69,7 @@ export default function Pricing() {
 	};
 
   // Promo code shown on the pricing page (managed here so it's easy to update)
-  const PROMO_CODE = 'ROYAL6234';
+  const PROMO_CODE = '50FOR3';
 
 	// Determine button text and state
 	const getButtonContent = () => {
@@ -181,7 +181,7 @@ export default function Pricing() {
                       <span className="text-xl text-white/50">/month</span>
                     </div>
                     <p className="text-white/50 mt-2">Cancel anytime. No contracts.</p>
-                    <p className="text-sm text-white/60 mt-2">Use promo code <span className="font-medium text-white">{PROMO_CODE}</span> at checkout.</p>
+                    <p className="text-sm text-white/60 mt-2">Use promo code <span className="font-medium text-white">{PROMO_CODE}</span> to get <span className="font-semibold text-gold-400">50% off for the first 3 months!</span></p>
                   </div>
 
                   {/* Show welcome message for logged-in users */}

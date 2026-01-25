@@ -8,7 +8,7 @@ import {
 import { FadeInOnScroll, StaggerContainer, StaggerItem, Parallax, Float, TiltCard } from '../components/animations';
 
 // Promo code constant
-const PROMO_CODE = 'Royal6234';
+const PROMO_CODE = '50FOR3';
 
 // TikTok Icon Component
 const TikTokIcon = ({ className }: { className?: string }) => (
@@ -124,7 +124,7 @@ export default function Home() {
                 </h2>
                 
                 <p className="text-lg md:text-xl text-white/70 mb-6">
-                  Use promo code at checkout
+                  Get 50% off for the first 3 months!
                 </p>
                 
                 <div className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-royal-600/30 to-gold-500/30 border-2 border-gold-400/50 backdrop-blur-sm mb-6">
@@ -135,7 +135,7 @@ export default function Home() {
                 </div>
                 
                 <p className="text-white/60 mb-8 max-w-2xl mx-auto">
-                  Join now and start claiming every dollar you've earned. Full access to all royalty tracking tools.
+                  Join now with promo code <span className="font-semibold text-white">{PROMO_CODE}</span> and start claiming every dollar you've earned at just $17.50/month for your first 3 months.
                 </p>
                 
                 <Link
@@ -313,10 +313,10 @@ export default function Home() {
 
                   {/* Promo Code Display */}
                   <div className="mb-8 py-4 px-6 rounded-xl bg-gold-500/10 border border-gold-500/30 inline-block">
-                    <p className="text-sm text-white/70 mb-1">Use promo code at checkout</p>
+                    <p className="text-sm text-white/70 mb-1">Use promo code <span className="font-bold text-white">{PROMO_CODE}</span></p>
                     <div className="flex items-center gap-2">
                       <Tag className="w-5 h-5 text-gold-400" />
-                      <span className="text-2xl font-bold gradient-text-yellow tracking-wide">{PROMO_CODE}</span>
+                      <span className="text-lg font-semibold text-gold-400">Get 50% off for the first 3 months!</span>
                     </div>
                   </div>
 
@@ -491,7 +491,7 @@ export default function Home() {
               <Tag className="w-4 h-4 text-gold-400" />
               <span className="text-sm text-white/70">Use code</span>
               <span className="text-lg font-bold gradient-text-yellow">{PROMO_CODE}</span>
-              <span className="text-sm text-white/70">at checkout</span>
+              <span className="text-sm text-white/70">for 50% off first 3 months</span>
             </div>
           </FadeInOnScroll>
         </div>
