@@ -3,9 +3,12 @@ import { motion } from 'framer-motion';
 import {
   Crown, ArrowRight, DollarSign, FileText, BarChart3,
   CheckCircle, Music, Shield, Zap, TrendingUp, Users, Lock,
-  ExternalLink
+  ExternalLink, Tag, Sparkles
 } from 'lucide-react';
 import { FadeInOnScroll, StaggerContainer, StaggerItem, Parallax, Float, TiltCard } from '../components/animations';
+
+// Promo code constant
+const PROMO_CODE = 'Royal6234';
 
 // TikTok Icon Component
 const TikTokIcon = ({ className }: { className?: string }) => (
@@ -90,6 +93,62 @@ export default function Home() {
               Learn how it works →
             </Link>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Promo Code Banner */}
+      <section className="py-12 px-6">
+        <div className="max-w-4xl mx-auto">
+          <FadeInOnScroll>
+            <motion.div
+              className="glass-card rounded-3xl p-8 md:p-12 relative overflow-hidden border-2 border-gold-500/30"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.3 }}
+            >
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-gold-500/10 via-royal-600/10 to-gold-500/10"
+                animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
+                transition={{ duration: 8, repeat: Infinity }}
+                style={{ backgroundSize: '200% 200%' }}
+              />
+              
+              <div className="relative z-10 text-center">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold-500/20 border border-gold-500/40 mb-4">
+                  <Sparkles className="w-4 h-4 text-gold-400 animate-pulse" />
+                  <span className="text-sm font-medium text-gold-400">LIMITED TIME OFFER</span>
+                  <Sparkles className="w-4 h-4 text-gold-400 animate-pulse" />
+                </div>
+                
+                <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
+                  Special Launch Promo
+                </h2>
+                
+                <p className="text-lg md:text-xl text-white/70 mb-6">
+                  Use promo code at checkout
+                </p>
+                
+                <div className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-royal-600/30 to-gold-500/30 border-2 border-gold-400/50 backdrop-blur-sm mb-6">
+                  <Tag className="w-6 h-6 text-gold-400" />
+                  <span className="text-3xl md:text-4xl font-bold gradient-text-yellow tracking-wider">
+                    {PROMO_CODE}
+                  </span>
+                </div>
+                
+                <p className="text-white/60 mb-8 max-w-2xl mx-auto">
+                  Join now and start claiming every dollar you've earned. Full access to all royalty tracking tools.
+                </p>
+                
+                <Link
+                  to="/signup"
+                  className="inline-flex items-center gap-2 btn-primary text-lg px-8 py-4"
+                >
+                  <Crown className="w-5 h-5" />
+                  Get Started for $35/month
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+              </div>
+            </motion.div>
+          </FadeInOnScroll>
         </div>
       </section>
 
@@ -247,10 +306,19 @@ export default function Home() {
                     <span className="text-xl text-white/50">/month</span>
                   </h2>
 
-                  <p className="text-xl text-white/60 mb-8 max-w-lg mx-auto">
+                  <p className="text-xl text-white/60 mb-4 max-w-lg mx-auto">
                     One price. Full access. No hidden fees.<br />
                     <span className="text-gold-400">Cancel anytime.</span>
                   </p>
+
+                  {/* Promo Code Display */}
+                  <div className="mb-8 py-4 px-6 rounded-xl bg-gold-500/10 border border-gold-500/30 inline-block">
+                    <p className="text-sm text-white/70 mb-1">Use promo code at checkout</p>
+                    <div className="flex items-center gap-2">
+                      <Tag className="w-5 h-5 text-gold-400" />
+                      <span className="text-2xl font-bold gradient-text-yellow tracking-wide">{PROMO_CODE}</span>
+                    </div>
+                  </div>
 
                   <div className="grid md:grid-cols-2 gap-4 text-left max-w-md mx-auto mb-8">
                     {[
@@ -408,14 +476,23 @@ export default function Home() {
               artists who've taken control of their earnings with Royally Tuned.
             </p>
 
-            <Link
-              to="/signup"
-              className="group inline-flex items-center gap-3 btn-primary text-xl px-12 py-5"
-            >
-              <Crown className="w-6 h-6" />
-              Start Claiming Your Royalties
-              <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-            </Link>
+            <div className="mb-8">
+              <Link
+                to="/signup"
+                className="group inline-flex items-center gap-3 btn-primary text-xl px-12 py-5"
+              >
+                <Crown className="w-6 h-6" />
+                Start Claiming Your Royalties
+                <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+
+            <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gold-500/10 border border-gold-500/30">
+              <Tag className="w-4 h-4 text-gold-400" />
+              <span className="text-sm text-white/70">Use code</span>
+              <span className="text-lg font-bold gradient-text-yellow">{PROMO_CODE}</span>
+              <span className="text-sm text-white/70">at checkout</span>
+            </div>
           </FadeInOnScroll>
         </div>
       </section>
