@@ -100,14 +100,16 @@ export default function Dashboard() {
             .eq('is_active', true),
           client
             .from('earnings')
-            .select('*, tracks(title)')
-            .eq('artist_id', selectedArtist.id)
+						// Don't rely on earnings.artist_id existing; scope by joined track instead.
+						.select('*, tracks!inner(title, artist_id)')
+						.eq('tracks.artist_id', selectedArtist.id)
             .order('created_at', { ascending: false })
             .limit(50),
           client
             .from('notifications')
             .select('*')
-            .eq('artist_id', selectedArtist.id)
+						// Notifications are currently user-scoped in the DB schema.
+						.eq('user_id', user.id)
             .order('created_at', { ascending: false })
             .limit(10),
         ]);
