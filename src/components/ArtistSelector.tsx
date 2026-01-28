@@ -125,8 +125,9 @@ export default function ArtistSelector() {
                     value={newArtistName}
                     onChange={(e) => setNewArtistName(e.target.value)}
                     placeholder="Artist name"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     autoFocus
+                    style={{ color: 'inherit' }}
                   />
                   {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
                   <div className="mt-3 flex gap-2">
