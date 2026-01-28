@@ -163,42 +163,34 @@ export function ArtistProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(SELECTED_ARTIST_KEY, artistId);
   }, []);
 
-  // Create a new artist
+  // Create a new artist using the SECURITY DEFINER RPC function (bypasses RLS)
   const createArtist = useCallback(async (artistName: string) => {
     if (!user || !supabase) {
       return { ok: false, error: 'Not authenticated' };
     }
 
     try {
-      // Create artist
-      const { data: artistData, error: artistError } = await supabase
-        .from('artists')
-        .insert({ artist_name: artistName })
-        .select()
-        .single();
-
-      if (artistError || !artistData) {
-        return { ok: false, error: artistError?.message || 'Failed to create artist' };
-      }
-
-      // Link user to artist as owner
-      const { error: linkError } = await supabase
-        .from('artist_managers')
-        .insert({
-          user_id: user.id,
-          artist_id: artistData.id,
-          role: 'owner',
+      // Use the create_artist_for_user RPC function which:
+      // 1. Is SECURITY DEFINER so it bypasses RLS
+      // 2. Creates both artist AND artist_managers record atomically
+      const { data: artistId, error: rpcError } = await supabase
+        .rpc('create_artist_for_user', {
+          p_user_id: user.id,
+          p_artist_name: artistName,
+          p_role: 'owner',
         });
 
-      if (linkError) {
-        return { ok: false, error: linkError.message };
+      if (rpcError || !artistId) {
+        console.error('[ArtistContext] RPC error:', rpcError);
+        return { ok: false, error: rpcError?.message || 'Failed to create artist' };
       }
 
       // Refresh artists list
       await refreshArtists();
 
-      return { ok: true, artistId: artistData.id };
+      return { ok: true, artistId: artistId as string };
     } catch (err) {
+      console.error('[ArtistContext] createArtist error:', err);
       return { ok: false, error: err instanceof Error ? err.message : 'Unknown error' };
     }
   }, [user, refreshArtists]);
