@@ -34,10 +34,7 @@ export default function ArtistSelector() {
     }
   };
 
-  // Don't show selector if user only has one artist (independent artist mode)
-  if (managedArtists.length <= 1) {
-    return null;
-  }
+  // Always show selector so users can add more artists
 
   return (
     <div className="relative">
